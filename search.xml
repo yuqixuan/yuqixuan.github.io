@@ -1,14 +1,273 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>带有标签的博文</title>
-    <url>/2020/11/02/%E5%B8%A6%E6%9C%89%E6%A0%87%E7%AD%BE%E7%9A%84%E5%8D%9A%E6%96%87/</url>
-    <content><![CDATA[<h3 id="带有标签的博文"><a href="#带有标签的博文" class="headerlink" title="带有标签的博文"></a>带有标签的博文</h3>]]></content>
+    <title>js优化</title>
+    <url>/2020/11/02/js%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<h2 id="优化方法："><a href="#优化方法：" class="headerlink" title="优化方法："></a>优化方法：</h2><p>1.阻塞式脚本：合并文件（减少http请求），将script标签放在body尾部（减少页面css，html的下载阻塞，减少界面的空白时间（浏览器在解析到script标签之前，不会渲染页面的任何部分））</p>
+<blockquote>
+<p>目前流行的构建工具，如webpack,gulp，都有打包、合并文件的功能。</p>
+</blockquote>
+<p>2.无阻塞式脚本：延迟脚本和动态脚本均不阻塞，即下载过程不阻塞其他进程</p>
+<p>延迟脚本：<br>defer和async属性：都是并行下载，下载过程不阻塞，区别在于执行时机，async是下载完成后立即执行；defer是等页面加载完成后再执行。defer仅当src属性声明时才生效（HTML5的规范）</p>
+<p>动态脚本：<br>动态添加script标签，返回的代码通常会立刻执行，所以，为了确保脚本下载完成且准备就绪后才执行，须侦听load事件。将script添加到head中比添加到body中更保险。</p>
+<h2 id="数据存取"><a href="#数据存取" class="headerlink" title="数据存取"></a>数据存取</h2><p>将全局变量存储到局部变量中：因为全局变量总是存在于执行环境作用域链的最末端，所以，访问全局变量是最慢的，访问局部变量是最快的。尤其是对于未优化过的JavaScript引擎。</p>
+<p>在JavaScript中，只有2个语句可以在执行时临时改变作用域链：with语句和try-catch的catch子句。with语句会使得局部变量位于作用域第二层，会使性能下降，所以应避免使用。try-catch权衡使用（因为可预测的错误说明代码有问题，应及早修复）。</p>
+<p>尽量避免使用with，try-catch，eval等动态作用域语句，因为JavaScript引擎无法通过静态分析的方法进行优化。</p>
+<p>闭包会影响性能（作用域链加深）和可能导致内存泄漏（IE中）</p>
+<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><ol>
+<li>使用对象字面量代替对象</li>
+<li>使用局部变量存储全局变量和对象成员</li>
+<li>尽量不用with，eval语句，try-catch的catch子句要谨慎使用</li>
+<li>嵌套越深，性能越差，尽量少用。</li>
+</ol>
+<h2 id="DOM编程"><a href="#DOM编程" class="headerlink" title="DOM编程"></a>DOM编程</h2><p>DOM和JavaScript是2个独立的功能，只通过API连接，用JavaScript操作DOM天生就慢，所以应尽量减少用JavaScript操作DOM。</p>
+<h3 id="原则："><a href="#原则：" class="headerlink" title="原则："></a>原则：</h3><p>1.减少访问DOM的次数，把运算尽量留在ECMAScript这一端处理。<br>2.innerHTML在绝大多数浏览器中比原生DOM方法要快（最新版的chrome除外），推荐使用。<br>3.用element.cloneNode()代替document.createElement()，稍快一些。<br>4.缓存HTML集合的length.<br>5.使用children代替childNodes，因为childNodes会包含文本节点（空格）和注释节点，还需要自己额外过滤这些节点，children已经帮我们过滤掉这些节点了，而且使用的过滤方法效率很高。<br>6.原生选择器API：querySelectorAll()和querySelector() ，IE8及以上支持<br>querySelectorAll()返回的是个nodelist（也是类数组），不是HTML集合（与getElenmentsByTagName等不同）。<br>7.减少重绘和重排：<br>在修改样式的过程中，最好避免使用下面的属性,因为它们会刷新渲染队列，尽量少查询下列属性，可以用局部变量缓存结果。<br>8.合并多次对DOM和样式的修改：<br>9.批量修改DOM时，使用documentfragment：文档片段是一个轻量级的document对象，它本身就是为了更新和移动节点设计的。<br>10.动画中使用绝对定位，使用拖放代理。<br>11.使用事件委托来减少事件处理器的数量。 </p>
+<h2 id="算法和流程控制"><a href="#算法和流程控制" class="headerlink" title="算法和流程控制"></a>算法和流程控制</h2><ol>
+<li>for…in的循环性能最差（因为它需要搜索实例和原型上的所有属性），除非，你需要遍历一个属性数量未知的对象，否则不要使用它。更不要用它遍历数组成员。其余的循环性能都差不多。</li>
+<li>倒序循环，把减法操作放到控制条件中，例如：k–，这样只是比较“它是true吗？”速度更快。</li>
+<li>forEach()比数组循环慢，如果对性能有极致要求，还是用数组循环好。</li>
+<li>当判断值多于2个时，使用switch，否则用if-else （数量少时，性能差别不大，可根据个人喜好使用）。若判断值很多，且没有什么复杂的操作，可以用数组代替switch。<br>在JavaScript中，switch使用全等操作符，不会发生类型转换的损耗。</li>
+<li>把最可能出现的条件放在首位。</li>
+<li>调用栈溢出错误基本都是由递归导致的：不正确的终止条件；包含了太多递归，超过了浏览器的调用栈限制。把递归算法改用迭代算法实现是避免调用栈溢出错误的解决方法之一。</li>
+<li>缓存：避免重复性工作，手动实现缓存（Vue源码中就有很多缓存）</li>
+</ol>
+<p><strong>tips: JavaScript的下载和执行会阻塞用户界面的绘制和其他资源的下载</strong></p>
+]]></content>
       <categories>
-        <category>Testing</category>
+        <category>性能优化</category>
       </categories>
       <tags>
-        <tag>Testing</tag>
+        <tag>js优化</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>css优化</title>
+    <url>/2020/11/02/css%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<h2 id="1-内联首屏关键CSS（Critical-CSS）"><a href="#1-内联首屏关键CSS（Critical-CSS）" class="headerlink" title="1. 内联首屏关键CSS（Critical CSS）"></a>1. 内联首屏关键CSS（Critical CSS）</h2><p>性能优化中有一个重要的指标——<strong>首次有效绘制</strong>（First Meaningful Paint，简称FMP）即指页面的首要内容（primary content）出现在屏幕上的时间。这一指标影响用户看到页面前所需等待的时间，而<strong>内联首屏关键CSS（即Critical CSS，可以称之为首屏关键CSS）</strong>能减少这一时间。</p>
+<p>大家应该都习惯于通过link标签引用外部CSS文件。但需要知道的是，将CSS直接内联到HTML文档中能使CSS更快速地下载。而使用外部CSS文件时，需要在HTML文档下载完成后才知道所要引用的CSS文件，然后才下载它们。所以说，<strong>内联CSS能够使浏览器开始页面渲染的时间提前</strong>，因为在HTML下载完成之后就能渲染了。</p>
+<p>既然内联CSS能够使页面渲染的开始时间提前，那么是否可以内联所有的CSS呢？答案显然是否定的，这种方式并不适用于内联较大的CSS文件。因为<a href="https://tylercipriani.com/blog/2016/09/25/the-14kb-in-the-tcp-initial-window/">初始拥塞窗口</a>存在限制（TCP相关概念，通常是 14.6kB，压缩后大小），如果内联CSS后的文件超出了这一限制，系统就需要在服务器和浏览器之间进行更多次的往返，这样并不能提前页面渲染时间。因此，我们应当<strong>只将渲染首屏内容所需的关键CSS内联到HTML中</strong>。</p>
+<p>既然已经知道内联首屏关键CSS能够优化性能了，那下一步就是如何确定首屏关键CSS了。显然，我们不需要手动确定哪些内容是首屏关键CSS。Github上有一个项目<a href="https://github.com/filamentgroup/criticalCSS">Critical CSS</a>4，可以将属于首屏的关键样式提取出来。</p>
+<p>不过内联CSS有一个缺点，内联之后的CSS不会进行缓存，每次都会重新下载。不过如上所说，如果我们将内联后的文件大小控制在了14.6kb以内，这似乎并不是什么大问题。</p>
+<p>如上，我们已经介绍了为什么要内联关键CSS以及如何内联，那么剩下的CSS我们怎么处理好呢？建议使用外部CSS引入剩余CSS，这样能够启用缓存，除此之外还可以异步加载它们。</p>
+<h2 id="2-异步加载CSS"><a href="#2-异步加载CSS" class="headerlink" title="2. 异步加载CSS"></a>2. 异步加载CSS</h2><p>CSS会阻塞渲染，在CSS文件请求、下载、解析完成之前，浏览器将不会渲染任何已处理的内容。有时，这种阻塞是必须的，因为我们并不希望在所需的CSS加载之前，浏览器就开始渲染页面。那么将首屏关键CSS内联后，剩余的CSS内容的阻塞渲染就不是必需的了，可以使用外部CSS，并且异步加载。</p>
+<p>现在，<a href="https://www.w3.org/TR/preload/">rel=”preload”</a>这一Web标准指出了如何异步加载资源，包括CSS类资源。</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">&quot;preload&quot;</span> <span class="attr">href</span>=<span class="string">&quot;mystyles.css&quot;</span> <span class="attr">as</span>=<span class="string">&quot;style&quot;</span> <span class="attr">onload</span>=<span class="string">&quot;this.rel=&#x27;stylesheet&#x27;&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>注意，<code>as</code>是必须的。忽略<code>as</code>属性，或者错误的<code>as</code>属性会使<code>preload</code>等同于<code>XHR</code>请求，浏览器不知道加载的是什么内容，因此此类资源加载优先级会非常低。<code>as</code>的可选值可以参考上述标准文档。</p>
+<p>看起来，<code>rel=&quot;preload&quot;</code>的用法和上面两种没什么区别，都是通过更改某些属性，使得浏览器异步加载CSS文件但不解析，直到加载完成并将修改还原，然后开始解析。</p>
+<p>但是它们之间其实有一个很重要的不同点，那就是<strong>使用preload，比使用不匹配的<code>media</code>方法能够更早地开始加载CSS</strong>。所以尽管这一标准的支持度还不完善，仍建议优先使用该方法。</p>
+<p>该标准现在已经是候选标准，相信浏览器会逐渐支持该标准。在各浏览器的支持度如下图所示。</p>
+<p><img data-src="https://user-gold-cdn.xitu.io/2018/8/1/164f3b1b1df0672d?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="preload浏览器支持度"></p>
+<p>从上图可以看出这一方法在现在的浏览器中支持度不算乐观，不过我们可以通过<a href="https://github.com/filamentgroup/loadCSS/tree/v2.0.1#loadcss">loadCSS</a>进行polyfill，所以支持不支持，这都不是事儿。</p>
+<h2 id="3-文件压缩"><a href="#3-文件压缩" class="headerlink" title="3. 文件压缩"></a>3. 文件压缩</h2><p>性能优化时有一个最容易想到，也最常使用的方法，那就是文件压缩，这一方案往往效果显著。<br>文件的大小会直接影响浏览器的加载速度，这一点在网络较差时表现地尤为明显。相信大家都早已习惯对CSS进行压缩，现在的构建工具，如webpack、gulp/grunt、rollup等也都支持CSS压缩功能。压缩后的文件能够明显减小，可以大大降低了浏览器的加载时间。</p>
+<h2 id="4-去除无用CSS"><a href="#4-去除无用CSS" class="headerlink" title="4. 去除无用CSS"></a>4. 去除无用CSS</h2><p>虽然文件压缩能够降低文件大小。但CSS文件压缩通常只会去除无用的空格，这样就限制了CSS文件的压缩比例。那是否还有其他手段来精简CSS呢？答案显然是肯定的，如果压缩后的文件仍然超出了预期的大小，我们可以试着<strong>找到并删除代码中无用的CSS</strong>。</p>
+<p>一般情况下，会存在这两种无用的CSS代码：一种是不同元素或者其他情况下的重复代码，一种是整个页面内没有生效的CSS代码。对于前者，在编写的代码时候，我们应该尽可能地提取公共类，减少重复。对于后者，在不同开发者进行代码维护的过程中，总会产生不再使用的CSS的代码，当然一个人编写时也有可能出现这一问题。而这些无用的CSS代码不仅会增加浏览器的下载量，还会增加浏览器的解析时间，这对性能来说是很大的消耗。所以我们需要找到并去除这些无用代码。</p>
+<p>当然，如果手动删除这些无用CSS是很低效的。我们可以借助<a href="https://github.com/uncss/uncss">Uncss</a>7库来进行。Uncss可以用来移除样式表中的无用CSS，并且支持多文件和JavaScript注入的CSS。</p>
+]]></content>
+      <categories>
+        <category>性能优化</category>
+      </categories>
+      <tags>
+        <tag>css优化</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>从零开始搭建个人博客</title>
+    <url>/2020/11/02/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/</url>
+    <content><![CDATA[<h3 id="注册GitHub账号"><a href="#注册GitHub账号" class="headerlink" title="注册GitHub账号"></a>注册GitHub账号</h3><p>进入<a href="https://github.com/">GitHub官网</a>，新用户注册，一定记住注册的账号名和邮箱，后面会用到。</p>
+<h3 id="安装node-js和npm"><a href="#安装node-js和npm" class="headerlink" title="安装node.js和npm"></a>安装node.js和npm</h3><p>进入<a href="https://nodejs.org/en/download/">Node官网</a>，下载相应版本。在Windows上安装时务必选择全部组件，包括勾选 <code>Add to Path</code>。</p>
+<p>注意安装Node.js会包含环境变量及npm的安装，安装后，检测Node.js是否安装成功，在cmd命令行中输入：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ node -v # 会显示相应版本号，说明安装成功</span><br><span class="line">$ npm -v # 会显示相应版本号，说明安装成功</span><br></pre></td></tr></table></figure>
+
+<h3 id="安装Git-for-windows"><a href="#安装Git-for-windows" class="headerlink" title="安装Git for windows"></a>安装Git for windows</h3><h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>建议到<a href="https://git-scm.com/">Git官网</a>下载最新版本，国内访问会很慢，可以到网上搜索下载，然后默认安装即可。安装完成后，在开始菜单里面找到 “Git –&gt; Git Bash”，打开后界面如下：</p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/NexT-assets/1.1.png" alt="Git"></p>
+<h4 id="设置用户名和邮箱"><a href="#设置用户名和邮箱" class="headerlink" title="设置用户名和邮箱"></a>设置用户名和邮箱</h4><p>因为Git是分布式版本控制系统，所以需要填写用户名和邮箱作为一个标识。在命令行输入如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ git config --global user.name &quot;user_name&quot; # user_name填入GitHub用户名</span><br><span class="line">$ git config --global user.email &quot;user_email&quot; # user_email填入GitHub注册的邮箱</span><br></pre></td></tr></table></figure>
+
+<p>查看已设置的用户名和邮箱，在命令行输入如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ git config user.name</span><br><span class="line">$ git config user.email</span><br></pre></td></tr></table></figure>
+
+<h2 id="搭建github博客"><a href="#搭建github博客" class="headerlink" title="搭建github博客"></a>搭建github博客</h2><h3 id="创建仓库"><a href="#创建仓库" class="headerlink" title="创建仓库"></a>创建仓库</h3><p>登陆GitHub，新建一个名为**<code>你的用户名.github.io</code>**的仓库，如下图：</p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/NexT-assets/1.2.png" alt="Git"></p>
+<p>这里一定注意（否则后面的操作会出问题），如果你的 GitHub 用户名是 test，那么你就新建test.github.io的仓库（必须是你的用户名，其它名称无效），将来你的网站访问地址就是 <a href="https://test.github.io/">https://test.github.io</a> 了，如下图：</p>
+<p><a href="https://raw.githubusercontent.com/tengzi-will/img.tengzi-will.github.io/master/GitHub-Hexo-%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/03_Repository_name.jpg"><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/NexT-assets/1.3.png" alt="Git"></a></p>
+<p>由此可见，每一个 GitHub 账户最多只能创建一个这样可以直接使用域名访问的仓库。</p>
+<h3 id="配置-SSH-key"><a href="#配置-SSH-key" class="headerlink" title="配置 SSH key"></a>配置 SSH key</h3><p>打开Git Bash，在窗口中输入命令：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ ssh-keygen -t rsa -C &quot;user.email&quot; # user.email为GitHub上注册的邮箱</span><br></pre></td></tr></table></figure>
+
+<p>然后直接三个回车即可，默认不需要设置密码。查看是否已经有 ssh 密钥：打开用户主目录<code>C:\Users\lenovo\.ssh</code>，.ssh文件夹一定存放在<code>C:\Users\</code>目录下，至于后面的路径lenovo这个不一定每台电脑都相同。找到.ssh文件夹，打开如下：</p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/NexT-assets/1.4.png" alt="Git"></p>
+<p>然后找到生成的 <code>.ssh</code> 的文件夹中的 <code>id_rsa.pub</code> 密钥，将内容全部复制。其中 <code>id_rsa</code> 是私钥不能泄露，<code>id_rsa.pub</code> 是公钥可以放心告诉他人。</p>
+<p>打开 <a href="https://github.com/settings/keys">GitHub_Settings_keys</a> 页面，新建 <code>new SSH Key</code></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/NexT-assets/1.5.png" alt="Git"></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/NexT-assets/1.6.png" alt="Git"></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/NexT-assets/1.7.png" alt="Git"></p>
+<p><code>Title</code> 为标题，任意填即可，将刚刚复制的 <code>id_rsa.pub</code> 内容粘贴进去，最后点击 <code>Add SSH key</code> 。在 <code>Git Bash</code> 中检测 <code>GitHub</code> 公钥设置是否成功，输入如下命令：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ ssh -T git@github.com</span><br></pre></td></tr></table></figure>
+
+<p>验证是否连接成功，连接成功显示如下：</p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/NexT-assets/1.8.png" alt="Git"></p>
+<h2 id="使用Hexo博客框架"><a href="#使用Hexo博客框架" class="headerlink" title="使用Hexo博客框架"></a>使用Hexo博客框架</h2><p>Hexo官方使用文档：<a href="https://hexo.io/zh-cn/docs/">https://hexo.io/zh-cn/docs/</a></p>
+<p>本文使用的命令和官方文档不太一样，但意思相同，达到的效果也相同。初学者建议跟着本文一步一步做。</p>
+<h3 id="hexo简介"><a href="#hexo简介" class="headerlink" title="hexo简介"></a>hexo简介</h3><h4 id="hexo是什么"><a href="#hexo是什么" class="headerlink" title="hexo是什么"></a>hexo是什么</h4><p><code>Hexo</code> 是一个简单、快速、强大的基于 <code>Github Pages</code> 的博客框架，支持 <code>Markdown</code> 格式，有众多优秀插件和主题。</p>
+<p>GitHub：<a href="https://github.com/hexojs/hexo">https://github.com/hexojs/hexo</a></p>
+<h4 id="hexo原理"><a href="#hexo原理" class="headerlink" title="hexo原理"></a>hexo原理</h4><p>由于 <code>github pages</code> 存放的都是静态文件，博客存放的不只是文章内容，还有文章列表、分类、标签、翻页等动态内容，假如每次写完一篇文章都要手动更新博文目录和相关链接信息，相信谁都会疯掉，所以 <code>hexo</code> 所做的就是将这些 <code>md</code> 文件都放在本地，每次写完文章后调用写好的命令来批量完成相关页面的生成，然后再将有改动的页面提交到 <code>GitHub</code> 。</p>
+<h3 id="安装hexo与配置"><a href="#安装hexo与配置" class="headerlink" title="安装hexo与配置"></a>安装hexo与配置</h3><p>很多命令既可以用 Windows 的 <code>cmd</code> 来完成，也可以使用 <code>git bash</code> 来完成。几乎所有的命令我都是在 <code>git bash</code>上完成的，但是我在hexo初始化的过程中遇到文件夹node_modules无法生成的问题，需要 <code>cmd</code> 命令配合解决（后面会详细说明这个bug）。</p>
+<h4 id="安装与初始化"><a href="#安装与初始化" class="headerlink" title="安装与初始化"></a>安装与初始化</h4><p>在 <code>git bash</code> 输入以下命令：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ npm install -g hexo-cli # 该命令完成hexo的安装</span><br></pre></td></tr></table></figure>
+
+<p>这个安装时间较长耐心等待。</p>
+<p>安装完成后，在电脑的某个地方新建一个文件夹（名字可以随便取）专门用于存放博客代码，比如我的是 E:\web\github\username，由于这个文件夹将来存放博客的所有内容和素材，以及所有的博客操作都会在其中完成，所以最好不要随便放。</p>
+<p>进入新建的博客目录，输入如下命令：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ hexo init # 该命令完成hexo在本地博客目录的初始化</span><br></pre></td></tr></table></figure>
+
+<p>完成后检查博客目录中的文件信息，如下图：</p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/NexT-assets/1.9.png" alt="Git"></p>
+<p>如果缺少 <code>node_modules</code> 文件夹，请按照如下所述操作（否则跳过此步骤），导致这个原因为在自己的博客文件夹中 <code>.gitignore</code> 文件中添加了 <code>node_modules/</code> ，导致更新的时候，这个文件夹被忽略，没有被更新上去。</p>
+<p>解决方案：</p>
+<ol>
+<li>cmd进入博客当前文件夹路径</li>
+<li>执行 npm i</li>
+<li>执行 hexo clean</li>
+<li>执行hexo g </li>
+<li>执行 hexo s</li>
+</ol>
+<h4 id="生成静态文件"><a href="#生成静态文件" class="headerlink" title="生成静态文件"></a>生成静态文件</h4><p>在 <code>git bash</code> 输入以下命令：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ hexo g # 生成静态文件</span><br></pre></td></tr></table></figure>
+
+<p>执行以上命令之后，Hexo 就会在 <code>public</code> 文件夹生成相关 HTML 文件，这些文件将来都是要提交到 <code>GitHub</code> 上 <strong><code>你的用户名.github.io</code></strong> 的仓库上去的：</p>
+<h4 id="本地预览"><a href="#本地预览" class="headerlink" title="本地预览"></a>本地预览</h4><p>在 <code>git bash</code> 输入以下命令：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ hexo s # 开启本地预览</span><br></pre></td></tr></table></figure>
+
+<p><code>hexo s</code> 是开启本地预览服务，打开浏览器访问 <code>http://localhost:4000</code> 即可看到内容，<code>Ctrl+C</code> 停止本地预览。本地预览可以实时查看博客的编辑情况，待博客写完后一起部署到 <code>GitHub</code> 上。</p>
+<p>第一次初始化的时候 hexo默认的主题为landscape，打开时就是这个样子：</p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/NexT-assets/1.10.png" alt="Git"></p>
+<h3 id="上传到GitHub"><a href="#上传到GitHub" class="headerlink" title="上传到GitHub"></a>上传到GitHub</h3><h4 id="配置站点配置文件"><a href="#配置站点配置文件" class="headerlink" title="配置站点配置文件"></a>配置站点配置文件</h4><p>hexo 有2种 <code>_config.yml</code>文件，一个是根目录下的全局的 <code>_config.yml</code>，一个是各个主体 theme 下的 <code>_config.yml</code>。将前者称为<strong>站点配置文件</strong>， 后者称为<strong>主题配置文件</strong>。</p>
+<p>打开根目录下站点配置文件 <code>_config.yml</code>，配置有关 deploy 的部分：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"># Deployment</span><br><span class="line">## Docs: https://hexo.io/docs/one-command-deployment</span><br><span class="line">deploy:</span><br><span class="line">  type: git</span><br><span class="line">  repo: https:<span class="comment">//github.com/username/username.github.io.git  // username换成自己的用户名</span></span><br><span class="line">  branch: master</span><br></pre></td></tr></table></figure>
+
+<h4 id="安装插件"><a href="#安装插件" class="headerlink" title="安装插件"></a>安装插件</h4><p>在 <code>git bash</code> 输入以下命令：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> npm install hexo-deployer-git --save <span class="comment"># 安装部署插件</span></span></span><br></pre></td></tr></table></figure>
+
+<p>如果不进行上述操作，直接使用 <code>hexo d</code> 部署到 <code>GitHub</code>，将会报错。</p>
+<h4 id="部署到-GitHub"><a href="#部署到-GitHub" class="headerlink" title="部署到 GitHub"></a>部署到 GitHub</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> hexo clean</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> hexo g</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> hexo d</span></span><br></pre></td></tr></table></figure>
+
+<p>部署成功后，打开你的网址 <strong><code>https://你的用户名.github.io/</code></strong> 出现下图，表示部署成功。</p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/NexT-assets/1.10.png" alt="Git"></p>
+<p>自此博客的搭建就完成了，剩下的就是学习如何美化博客了！</p>
+<h2 id="Hexo博客基本配置"><a href="#Hexo博客基本配置" class="headerlink" title="Hexo博客基本配置"></a>Hexo博客基本配置</h2><h3 id="基本配置"><a href="#基本配置" class="headerlink" title="基本配置"></a>基本配置</h3><h4 id="更改主题"><a href="#更改主题" class="headerlink" title="更改主题"></a>更改主题</h4><p>官方默认主题很丑，那我们别的不做，首先来替换一个好看点的主题。</p>
+<blockquote>
+<p><a href="https://hexo.io/themes/">官方主题</a>：官方提供的各种主题</p>
+</blockquote>
+<p><a href="https://www.zhihu.com/question/24422335">知乎</a>、<a href="https://github.com/hexojs/hexo/wiki/Themes">GitHub</a> 上都能够找到各种主题推荐，这里不详细介绍。只以使用量排名第一的主题 NexT。更换 NexT 主题可以参考 <a href="http://theme-next.iissnan.com/">NexT 官方使用文档</a>，点击开始使用一步一步操作。下面做一个示范，其他主题的安装方法都是一样的。</p>
+<p>下载主题，最新版NexT 7.0x下载地址变为<code> https://github.com/theme-next/hexo-theme-next.git</code>了，在命令行输入以下命令：</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">$ git <span class="built_in">clone</span> https://github.com/theme-next/hexo-theme-next.git themes/next</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>​    启用主题，打开根目录下站点配置文件 <code>_config.yml</code>， 找到 <code>theme</code> 字段，并将其值更改为 <code>next</code>，如下：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line">## Themes: https://hexo.io/themes/</span><br><span class="line">## 配置主题</span><br><span class="line">theme: next</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>打开主题的 <code>_config.yml</code> 配置文件，不是<strong>站点配置文件</strong>，找到Scheme Settings</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"># Schemes</span><br><span class="line">#scheme: Muse</span><br><span class="line">#scheme: Mist</span><br><span class="line">#scheme: Pisces</span><br><span class="line">scheme: Gemini</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><code>next</code> 主题有四个样式，我用的是 <code>Gemini</code>，大家根据喜好设置。</p>
+<p>在切换主题之后、验证之前，我们最好使用 <code>hexo clean</code> 来清除 Hexo 的缓存，以免出现一些莫名其妙的问题。然后重新执行 <code>hexo g</code> 以及 <code>hexo s</code> 来重新生成和本地预览。如下图，说明主题修改完成。</p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/NexT-assets/1.11.png" alt="img"></p>
+<h4 id="配置站点信息"><a href="#配置站点信息" class="headerlink" title="配置站点信息"></a>配置站点信息</h4><p>打开根目录下站点配置文件 <code>_config.yml</code>，设置如下内容：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"># Site</span><br><span class="line">title: YQX<span class="string">&#x27;s Blog</span></span><br><span class="line"><span class="string">subtitle: &quot;每一个不曾起舞的日子都是对生命的辜负&quot;</span></span><br><span class="line"><span class="string">description: &quot;Stay hungry,stay foolish&quot;</span></span><br><span class="line"><span class="string">keywords: MachineLearning, DeepLearning, ReinforcementLearning</span></span><br><span class="line"><span class="string">author: Yu Qixuan</span></span><br><span class="line"><span class="string">language: zh-CN</span></span><br><span class="line"><span class="string">timezone: &#x27;</span><span class="string">&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li>title：网站标题</li>
+<li>subtitle：网站副标题</li>
+<li>description：网站描述</li>
+<li>keywords：关键字</li>
+<li>author：作者</li>
+<li>language：网站使用的语言</li>
+<li>timezone：网站时区。Hexo 默认使用您电脑的时区</li>
+</ul>
+<p>其中language一定要设置为主题能够识别的语言（不然中文可能出现乱码），在 <code>\themes\next\languages\</code> 中可以找到，中文格式为：zh-CN。</p>
+<h3 id="高级配置"><a href="#高级配置" class="headerlink" title="高级配置"></a>高级配置</h3><h4 id="初识-Markdown-语法"><a href="#初识-Markdown-语法" class="headerlink" title="初识 Markdown 语法"></a>初识 Markdown 语法</h4><p><strong>Markdown</strong> 是一种可以使用普通文本编辑器编写的标记语言，通过简单的标记语法，它可以使普通文本内容具有一定的格式。<strong>Markdown</strong> 语法简洁明了、容易掌握，而且功能比纯文本更强，因此写博客使用它，可以让用户更加专注的写文章，而不需要费尽心力的考虑样式，相对于 <code>html</code> 已经算是轻量级语言，像有道云笔记也支持<br><strong>Markdown</strong> 写作。并且 <strong>Markdown</strong> 完全兼容 <code>html</code>，也就是可以在文章里直接插入 <code>html</code> 代码。比如给博文添加音乐，就可以直接把音乐的外链 <code>html</code> 代码插入文章中。</p>
+<p>具体语法参看：<a href="https://www.appinn.com/markdown/">Markdown 语法说明(简体中文版)</a> 可以说十分钟就可以入门。当然，工欲善其事必先利其器，选择一个好的 <code>Markdown</code> 编辑器也是非常重要的，这里推荐 <a href="http://www.markdownpad.com/"><code>MarkdownPad</code></a>，这是带有预览效果的编辑器，也可以使用本地的文本编辑器，更多的 <code>Markdown</code> 的语法与编辑器自己可以搜索了解。</p>
+<h4 id="创建一篇博文"><a href="#创建一篇博文" class="headerlink" title="创建一篇博文"></a>创建一篇博文</h4><p>执行如下命令：</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&#x27;blog_name&#x27;</span> <span class="comment"># blog_name填入文章名字</span></span><br></pre></td></tr></table></figure>
+
+<p>hexo会帮我们在 <code>..\hexo\source\_posts</code> 下生成相关 <code>md</code> 文件，每一篇博客对应一个 <code>md</code> 文件。直接使用编辑器打开 <code>md</code> 文件可以直接编辑。</p>
+<h4 id="config-yml"><a href="#config-yml" class="headerlink" title="_config.yml"></a>_config.yml</h4><p>网站配置信息，也就是本文所称的<strong>站点配置文件</strong>，可以在此配置大部分的参数。基本配置在前面基本已经设置过了。</p>
+<h4 id="scaffolds"><a href="#scaffolds" class="headerlink" title="scaffolds"></a>scaffolds</h4><p>模版文件夹。新建文章时，<code>Hexo</code> 会根据 <code>scaffold</code> 来建立文件。默认的模板有三种 draft.md 、 page.md 和 post.md，我们自己也可以在该文件夹下创建属于自己定制的模板，推荐格式如下：</p>
+<ul>
+<li>title: GitHub + Hexo 从零开始搭建个人博客</li>
+<li>date: 1544357859000</li>
+<li>tags:</li>
+<li>categories：</li>
+<li>description：</li>
+</ul>
+<p>然后，输入 <code>hexo new blog &quot;文章名&quot;</code> 进行测试。</p>
+<h4 id="public"><a href="#public" class="headerlink" title="public"></a>public</h4><p>该文件夹中的内容将被最终 <code>push</code> 到 <code>GitHub</code> 仓库中。</p>
+<h4 id="source"><a href="#source" class="headerlink" title="source"></a>source</h4><p>资源文件夹是存放用户资源的地方。除 <code>_posts</code> 文件夹之外，开头命名为 <code>_ (下划线)</code> 的文件 / 文件夹和隐藏的文件将会被忽略。<code>Markdown</code> 和 <code>HTML</code> 文件会被解析并放到 <code>public</code> 文件夹，而其他文件会被拷贝到 <code>public</code> 文件夹。</p>
+<h4 id="themes"><a href="#themes" class="headerlink" title="themes"></a>themes</h4><p>主题文件夹，下载的主题都保存在此文件夹下。Hexo 会根据主题来生成静态页面。</p>
+<p>另外主题的配置也有很多高级技巧，这里附上 <a href="http://theme-next.iissnan.com/getting-started.html">Next 主题官方的配置文档教程</a>。</p>
+<p>还有许多个性化设置，如SEO、评论系统、个人头像、博客分享、订阅功能High功能、404网页设置等，可以参看：</p>
+<ul>
+<li><a href="http://theme-next.iissnan.com/theme-settings.html">主题配置 - NexT 使用文档</a></li>
+<li><a href="http://theme-next.iissnan.com/third-party-services.html">第三方服务集成 - NexT 使用文档</a></li>
+<li><a href="http://theme-next.iissnan.com/tag-plugins.html">内置标签 - NexT 使用文</a></li>
+<li><a href="http://theme-next.iissnan.com/advanced-settings.html">档进阶设定 - NexT 使用文档</a></li>
+<li><a href="http://www.iamlj.com/2016/08/add-special-effect-harlem-shake-for-hexo/">High功能特效 - Next 主题网站推荐博主的文章</a></li>
+</ul>
+<h4 id="寻找图床"><a href="#寻找图床" class="headerlink" title="寻找图床"></a>寻找图床</h4><p>图床，当博文中有图片时，若是少量图片，可以直接把图片存放在 <code>source</code> 文件夹中，但这显然不合理的，因为图片会占据大量的存储的空间，加载的时候相对缓慢 ，这时考虑把博文里的图片上传到某一网站，然后获得外部链接，使用 <code>Markdown</code> 语法，<code>![图片信息](外部链接)</code> 完成图片的插入，这种网站就被成为图床。其实也可以直接在 GitHub 中新建一个仓库，专门用来存放博客的图片，我就是用的这个方法。</p>
+<h2 id="hexo常用命令"><a href="#hexo常用命令" class="headerlink" title="hexo常用命令"></a>hexo常用命令</h2><h3 id="常见命令"><a href="#常见命令" class="headerlink" title="常见命令"></a>常见命令</h3><ol>
+<li>hexo new “postName” # 新建文章</li>
+<li>hexo clean # 清除缓存</li>
+<li>hexo generate # 生成静态页面至 public 目录</li>
+<li>hexo server # 开启预览访问端口（默认端口 4000，’ctrl + c’关闭 server）</li>
+<li>hexo deploy # 部署到 GitHub</li>
+<li>hexo help # 查看帮助</li>
+<li>hexo version # 查看 Hexo 的版本</li>
+</ol>
+<h3 id="缩写"><a href="#缩写" class="headerlink" title="缩写"></a>缩写</h3><ol>
+<li>hexo n == hexo new</li>
+<li>hexo g == hexo generate</li>
+<li>hexo s == hexo server</li>
+<li>hexo d == hexo deploy</li>
+</ol>
+<h3 id="组合命令"><a href="#组合命令" class="headerlink" title="组合命令"></a>组合命令</h3><ol>
+<li>hexo s -g # 生成并本地预览</li>
+<li>hexo d -g # 生成并上传</li>
+</ol>
+<h3 id="友情链接"><a href="#友情链接" class="headerlink" title="友情链接"></a>友情链接</h3><p><a href="http://theme-next.iissnan.com/getting-started.html">NexT官方文档</a></p>
+<p><a href="https://ahaasin.github.io/2019/09/05/hexo%E4%B8%8BnexT7-X%E4%B8%BB%E9%A2%98%E7%9A%84%E7%BE%8E%E5%8C%96%E5%8F%8A%E5%85%B6%E4%BB%96%E8%AE%BE%E7%BD%AE/">hexo下NexT7.X主题的美化及其他设置</a></p>
+<p><a href="https://blog.csdn.net/weixin_42905141/article/details/102677424">hexo4.0 - Next7.2.4 主题优化配置</a></p>
+]]></content>
+      <categories>
+        <category>NexT</category>
+      </categories>
+      <tags>
+        <tag>从零开始搭建个人博客</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>前端优化</title>
+    <url>/2020/11/02/%E5%89%8D%E7%AB%AF%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<h2 id="前端优化"><a href="#前端优化" class="headerlink" title="前端优化"></a>前端优化</h2><p>降低请求量：合并资源，减少HTTP 请求数，minify / gzip 压缩，webP，lazyLoad。</p>
+<p>加快请求速度：预解析DNS，减少域名数，并行加载，CDN 分发。</p>
+<p>缓存：HTTP 协议缓存请求，离线缓存 manifest，离线数据缓存localStorage。</p>
+<p>渲染：JS/CSS优化，加载顺序，服务端渲染，pipeline。</p>
+<h2 id="性能优化"><a href="#性能优化" class="headerlink" title="性能优化"></a>性能优化</h2><h4 id="参考回答："><a href="#参考回答：" class="headerlink" title="参考回答："></a>参考回答：</h4><p>减少HTTP请求</p>
+<p>使用内容发布网络（CDN）</p>
+<p>添加本地缓存</p>
+<p>压缩资源文件</p>
+<p>将CSS样式表放在顶部，把javascript放在底部（浏览器的运行机制决定）</p>
+<p>避免使用CSS表达式</p>
+<p>减少DNS查询</p>
+<p>使用外部javascript和CSS</p>
+<p>避免重定向</p>
+<p>图片lazyLoad</p>
+]]></content>
+      <categories>
+        <category>性能优化</category>
+      </categories>
+      <tags>
+        <tag>前端优化</tag>
       </tags>
   </entry>
   <entry>
@@ -151,11 +410,11 @@
 <p><strong>平均情况时间复杂度</strong></p>
 <p>如何分析平均时间复杂度 ？代码在不同情况下复杂度出现量级差别，则用代码所有可能情况下执行次数的加权平均值表示。</p>
 <p>要查找的变量 x 在数组中的位置，有 n+1 种情况：在数组的 0～n-1 位置中和不在数组中。我们把每种情况下，查找需要遍历的元素个数累加起来，然后再除以 n+1，就可以得到需要遍历的元素个数的平均值，即：</p>
-<p>![img](F:\front-end notes\数据结构和算法\assets\1.1.png) </p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/1.1.png" alt="img"> </p>
 <p>省略掉系数、低阶、常量，所以，这个公式简化之后，得到的<code>平均时间复杂度</code>就是 O(n)。</p>
 <p>我们知道，要查找的变量 x，要么在数组里，要么就不在数组里。这两种情况对应的概率统计起来很麻烦，我们假设在数组中与不在数组中的概率都为 1/2。另外，要查找的数据出现在 0～n-1 这 n 个位置的概率也是一样的，为 1/n。所以，根据概率乘法法则，要查找的数据出现在 0～n-1 中任意位置的概率就是 1/(2n)。</p>
 <p>因此，前面的推导过程中存在的最大问题就是，没有将各种情况发生的概率考虑进去。如果我们把每种情况发生的概率也考虑进去，那平均时间复杂度的计算过程就变成了这样：</p>
-<p> ![img](F:\front-end notes\数据结构和算法\assets\1.2.png) </p>
+<p> <img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/1.2.png" alt="img"> </p>
 <p>这个值就是概率论中的 <strong>加权平均值</strong>，也叫 <strong>期望值</strong>，所以平均时间复杂度的全称应该叫 <strong>加权平均时间复杂度</strong> 或者 <strong>期望时间复杂度</strong>。</p>
 <p>所以，根据上面结论推导出，得到的 <code>平均时间复杂度</code> 仍然是 O(n)。</p>
 <p><strong>均摊时间复杂度</strong></p>
@@ -163,9 +422,9 @@
 <h3 id="3-6-时间复杂度总结"><a href="#3-6-时间复杂度总结" class="headerlink" title="3.6 时间复杂度总结"></a>3.6 时间复杂度总结</h3><p>常用的时间复杂度所耗费的时间从小到大依次是：</p>
 <p><strong>O(1) &lt; O(logn) &lt; (n) &lt; O(nlogn) &lt; O(n2) &lt; O(n3) &lt; O(2n) &lt; O(n!) &lt; O(nn)</strong></p>
 <p>常见的时间复杂度：</p>
-<p> ![img](F:\front-end notes\数据结构和算法\assets\1.3.png) </p>
-<p>![img](F:\front-end notes\数据结构和算法\assets\1.4.png)</p>
-<p>![img](F:\front-end notes\数据结构和算法\assets\1.5.png)</p>
+<p> <img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/1.3.png" alt="img"> </p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/1.4.png" alt="img"></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/1.5.png" alt="img"></p>
 <h3 id="3-7-空间复杂度分析"><a href="#3-7-空间复杂度分析" class="headerlink" title="3.7 空间复杂度分析"></a>3.7 空间复杂度分析</h3><p>时间复杂度的全称是 <strong>渐进时间复杂度</strong>，表示 <strong>算法的执行时间与数据规模之间的增长关系</strong> 。</p>
 <p>类比一下，空间复杂度全称就是 <strong>渐进空间复杂度</strong>（asymptotic space complexity），表示 <strong>算法的存储空间与数据规模之间的增长关系</strong> 。</p>
 <p>定义：算法的空间复杂度通过计算算法所需的存储空间实现，算法的空间复杂度的计算公式记作：**S(n) = O(f(n))**，其中，n 为问题的规模，f(n) 为语句关于 n 所占存储空间的函数。</p>
@@ -186,8 +445,517 @@
       </tags>
   </entry>
   <entry>
-    <title>第一篇博客</title>
-    <url>/2020/11/02/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/</url>
-    <content><![CDATA[<h3 id="第一篇博客"><a href="#第一篇博客" class="headerlink" title="第一篇博客"></a>第一篇博客</h3>]]></content>
+    <title>十大算法</title>
+    <url>/2020/11/02/%E5%8D%81%E5%A4%A7%E7%AE%97%E6%B3%95/</url>
+    <content><![CDATA[<h2 id="1-前言"><a href="#1-前言" class="headerlink" title="1. 前言"></a>1. 前言</h2><blockquote>
+<p>算法为王。</p>
+</blockquote>
+<blockquote>
+<p>想学好前端，先练好内功，内功不行，就算招式练的再花哨，终究成不了高手；只有内功深厚者，前端之路才会走得更远。</p>
+</blockquote>
+<p>笔者写的 <strong>JavaScript 数据结构与算法之美</strong> 系列用的语言是 <strong>JavaScript</strong> ，旨在入门数据结构与算法和方便以后复习。</p>
+<p>文中包含了 <code>十大经典排序算法</code> 的思想、代码实现、一些例子、复杂度分析、动画、还有算法可视化工具。</p>
+<p>这应该是目前最全的 <code>JavaScript 十大经典排序算法</code> 的讲解了吧。</p>
+<h2 id="2-如何分析一个排序算法"><a href="#2-如何分析一个排序算法" class="headerlink" title="2. 如何分析一个排序算法"></a>2. 如何分析一个排序算法</h2><p>复杂度分析是整个算法学习的精髓。</p>
+<ul>
+<li>时间复杂度: 一个算法执行所耗费的时间。</li>
+<li>空间复杂度: 运行完一个程序所需内存的大小。</li>
+</ul>
+<p>时间和空间复杂度的详解，请看 <a href="https://juejin.im/post/5cf37b6d6fb9a07eb15d3e88">JavaScript 数据结构与算法之美 - 时间和空间复杂度</a>。</p>
+<p>学习排序算法，我们除了学习它的算法原理、代码实现之外，更重要的是要学会如何评价、分析一个排序算法。</p>
+<p>分析一个排序算法，要从 <code>执行效率</code>、<code>内存消耗</code>、<code>稳定性</code> 三方面入手。</p>
+<h3 id="2-1-执行效率"><a href="#2-1-执行效率" class="headerlink" title="2.1 执行效率"></a>2.1 执行效率</h3><p><strong>1. 最好情况、最坏情况、平均情况时间复杂度</strong></p>
+<p>我们在分析排序算法的时间复杂度时，要分别给出最好情况、最坏情况、平均情况下的时间复杂度。<br>除此之外，你还要说出最好、最坏时间复杂度对应的要排序的原始数据是什么样的。</p>
+<p><strong>2. 时间复杂度的系数、常数 、低阶</strong></p>
+<p>我们知道，时间复杂度反应的是数据规模 n 很大的时候的一个增长趋势，所以它表示的时候会忽略系数、常数、低阶。</p>
+<p>但是实际的软件开发中，我们排序的可能是 10 个、100 个、1000 个这样规模很小的数据，所以，在对同一阶时间复杂度的排序算法性能对比的时候，我们就要把系数、常数、低阶也考虑进来。</p>
+<p><strong>3. 比较次数和交换（或移动）次数</strong></p>
+<p>这一节和下一节讲的都是基于比较的排序算法。基于比较的排序算法的执行过程，会涉及两种操作，一种是元素比较大小，另一种是元素交换或移动。</p>
+<p>所以，如果我们在分析排序算法的执行效率的时候，应该把比较次数和交换（或移动）次数也考虑进去。</p>
+<h3 id="2-2-内存消耗"><a href="#2-2-内存消耗" class="headerlink" title="2.2 内存消耗"></a>2.2 内存消耗</h3><p>也就是看空间复杂度。</p>
+<p>还需要知道如下术语：</p>
+<ul>
+<li><strong>内排序</strong>：所有排序操作都在内存中完成；</li>
+<li><strong>外排序</strong>：由于数据太大，因此把数据放在磁盘中，而排序通过磁盘和内存的数据传输才能进行；</li>
+<li><strong>原地排序</strong>：原地排序算法，就是特指空间复杂度是 O(1) 的排序算法。</li>
+</ul>
+<h3 id="2-3-稳定性"><a href="#2-3-稳定性" class="headerlink" title="2.3 稳定性"></a>2.3 稳定性</h3><ul>
+<li>稳定：如果待排序的序列中存在值<code>相等</code>的元素，经过排序之后，相等元素之间原有的先后顺序<code>不变</code>。<br>比如： a 原本在 b 前面，而 a = b，排序之后，a 仍然在 b 的前面；</li>
+<li>不稳定：如果待排序的序列中存在值<code>相等</code>的元素，经过排序之后，相等元素之间原有的先后顺序<code>改变</code>。<br>比如：a 原本在 b 的前面，而 a = b，排序之后， a 在 b 的后面；</li>
+</ul>
+<h2 id="3-十大经典排序算法"><a href="#3-十大经典排序算法" class="headerlink" title="3. 十大经典排序算法"></a>3. 十大经典排序算法</h2><h3 id="3-1-冒泡排序（Bubble-Sort）"><a href="#3-1-冒泡排序（Bubble-Sort）" class="headerlink" title="3.1 冒泡排序（Bubble Sort）"></a>3.1 冒泡排序（Bubble Sort）</h3><p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.1.gif" alt="2.1"></p>
+<p><strong>思想</strong></p>
+<ul>
+<li>冒泡排序只会操作相邻的两个数据。</li>
+<li>每次冒泡操作都会对相邻的两个元素进行比较，看是否满足大小关系要求。如果不满足就让它俩互换。</li>
+<li>一次冒泡会让至少一个元素移动到它应该在的位置，重复 n 次，就完成了 n 个数据的排序工作。</li>
+</ul>
+<p><strong>特点</strong></p>
+<ul>
+<li>优点：排序算法的基础，简单实用易于理解。</li>
+<li>缺点：比较次数多，效率较低。</li>
+</ul>
+<p><strong>实现</strong></p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 冒泡排序（未优化）</span></span><br><span class="line"><span class="keyword">const</span> bubbleSort = <span class="function"><span class="params">arr</span> =&gt;</span> &#123;</span><br><span class="line">	<span class="built_in">console</span>.time(<span class="string">&#x27;改进前冒泡排序耗时&#x27;</span>);</span><br><span class="line">	<span class="keyword">const</span> length = arr.length;</span><br><span class="line">	<span class="keyword">if</span> (length &lt;= <span class="number">1</span>) <span class="keyword">return</span>;</span><br><span class="line">	<span class="comment">// i &lt; length - 1 是因为外层只需要 length-1 次就排好了，第 length 次比较是多余的。</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; length - <span class="number">1</span>; i++) &#123;</span><br><span class="line">		<span class="comment">// j &lt; length - i - 1 是因为内层的 length-i-1 到 length-1 的位置已经排好了，不需要再比较一次。</span></span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">let</span> j = <span class="number">0</span>; j &lt; length - i - <span class="number">1</span>; j++) &#123;</span><br><span class="line">			<span class="keyword">if</span> (arr[j] &gt; arr[j + <span class="number">1</span>]) &#123;</span><br><span class="line">				<span class="keyword">const</span> temp = arr[j];</span><br><span class="line">				arr[j] = arr[j + <span class="number">1</span>];</span><br><span class="line">				arr[j + <span class="number">1</span>] = temp;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">console</span>.log(<span class="string">&#x27;改进前 arr :&#x27;</span>, arr);</span><br><span class="line">	<span class="built_in">console</span>.timeEnd(<span class="string">&#x27;改进前冒泡排序耗时&#x27;</span>);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>优化：当某次冒泡操作已经没有数据交换时，说明已经达到完全有序，不用再继续执行后续的冒泡操作。</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 冒泡排序（已优化）</span></span><br><span class="line"><span class="keyword">const</span> bubbleSort2 = <span class="function"><span class="params">arr</span> =&gt;</span> &#123;</span><br><span class="line">	<span class="built_in">console</span>.time(<span class="string">&#x27;改进后冒泡排序耗时&#x27;</span>);</span><br><span class="line">	<span class="keyword">const</span> length = arr.length;</span><br><span class="line">	<span class="keyword">if</span> (length &lt;= <span class="number">1</span>) <span class="keyword">return</span>;</span><br><span class="line">	<span class="comment">// i &lt; length - 1 是因为外层只需要 length-1 次就排好了，第 length 次比较是多余的。</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; length - <span class="number">1</span>; i++) &#123;</span><br><span class="line">		<span class="keyword">let</span> hasChange = <span class="literal">false</span>; <span class="comment">// 提前退出冒泡循环的标志位</span></span><br><span class="line">		<span class="comment">// j &lt; length - i - 1 是因为内层的 length-i-1 到 length-1 的位置已经排好了，不需要再比较一次。</span></span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">let</span> j = <span class="number">0</span>; j &lt; length - i - <span class="number">1</span>; j++) &#123;</span><br><span class="line">			<span class="keyword">if</span> (arr[j] &gt; arr[j + <span class="number">1</span>]) &#123;</span><br><span class="line">				<span class="keyword">const</span> temp = arr[j];</span><br><span class="line">				arr[j] = arr[j + <span class="number">1</span>];</span><br><span class="line">				arr[j + <span class="number">1</span>] = temp;</span><br><span class="line">				hasChange = <span class="literal">true</span>; <span class="comment">// 表示有数据交换</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (!hasChange) <span class="keyword">break</span>; <span class="comment">// 如果 false 说明所有元素已经到位，没有数据交换，提前退出</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">console</span>.log(<span class="string">&#x27;改进后 arr :&#x27;</span>, arr);</span><br><span class="line">	<span class="built_in">console</span>.timeEnd(<span class="string">&#x27;改进后冒泡排序耗时&#x27;</span>);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>测试</strong></p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 测试</span></span><br><span class="line"><span class="keyword">const</span> arr = [<span class="number">7</span>, <span class="number">8</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>];</span><br><span class="line">bubbleSort(arr);</span><br><span class="line"><span class="comment">// 改进前 arr : [1, 2, 3, 4, 5, 6, 7, 8]</span></span><br><span class="line"><span class="comment">// 改进前冒泡排序耗时: 0.43798828125ms</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> arr2 = [<span class="number">7</span>, <span class="number">8</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>];</span><br><span class="line">bubbleSort2(arr2);</span><br><span class="line"><span class="comment">// 改进后 arr : [1, 2, 3, 4, 5, 6, 7, 8]</span></span><br><span class="line"><span class="comment">// 改进后冒泡排序耗时: 0.318115234375ms</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>分析</strong></p>
+<ul>
+<li>第一，冒泡排序是原地排序算法吗 ？<br>冒泡的过程只涉及相邻数据的交换操作，只需要常量级的临时空间，所以它的空间复杂度为 O(1)，是一个<code>原地</code>排序算法。</li>
+<li>第二，冒泡排序是稳定的排序算法吗 ？<br>在冒泡排序中，只有交换才可以改变两个元素的前后顺序。<br>为了保证冒泡排序算法的稳定性，当有相邻的两个元素大小相等的时候，我们不做交换，相同大小的数据在排序前后不会改变顺序。<br>所以冒泡排序是<code>稳定</code>的排序算法。</li>
+<li>第三，冒泡排序的时间复杂度是多少 ？<br>最佳情况：T(n) = O(n)，当数据已经是正序时。<br>最差情况：T(n) = O(n2)，当数据是反序时。<br>平均情况：T(n) = O(n2)。</li>
+</ul>
+<p><strong>动画</strong></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.2.gif" alt="2.2"></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.3.gif" alt="2.3"></p>
+<h3 id="3-2-插入排序（Insertion-Sort）"><a href="#3-2-插入排序（Insertion-Sort）" class="headerlink" title="3.2 插入排序（Insertion Sort）"></a>3.2 插入排序（Insertion Sort）</h3><p>插入排序又为分为 <strong>直接插入排序</strong> 和优化后的 <strong>拆半插入排序</strong> 与 <strong>希尔排序</strong>，我们通常说的插入排序是指直接插入排序。</p>
+<p><strong>一、直接插入</strong></p>
+<p><strong>思想</strong></p>
+<p>一般人打扑克牌，整理牌的时候，都是按牌的大小（从小到大或者从大到小）整理牌的，那每摸一张新牌，就扫描自己的牌，把新牌插入到相应的位置。</p>
+<p>插入排序的工作原理：通过构建有序序列，对于未排序数据，在已排序序列中从后向前扫描，找到相应位置并插入。</p>
+<p><strong>步骤</strong></p>
+<ul>
+<li>从第一个元素开始，该元素可以认为已经被排序；</li>
+<li>取出下一个元素，在已经排序的元素序列中从后向前扫描；</li>
+<li>如果该元素（已排序）大于新元素，将该元素移到下一位置；</li>
+<li>重复步骤 3，直到找到已排序的元素小于或者等于新元素的位置；</li>
+<li>将新元素插入到该位置后；</li>
+<li>重复步骤 2 ~ 5。</li>
+</ul>
+<p><strong>实现</strong></p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 插入排序</span></span><br><span class="line"><span class="keyword">const</span> insertionSort = <span class="function"><span class="params">array</span> =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">const</span> len = array.length;</span><br><span class="line">	<span class="keyword">if</span> (len &lt;= <span class="number">1</span>) <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">let</span> preIndex, current;</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">1</span>; i &lt; len; i++) &#123;</span><br><span class="line">		preIndex = i - <span class="number">1</span>; <span class="comment">//待比较元素的下标</span></span><br><span class="line">		current = array[i]; <span class="comment">//当前元素</span></span><br><span class="line">		<span class="keyword">while</span> (preIndex &gt;= <span class="number">0</span> &amp;&amp; array[preIndex] &gt; current) &#123;</span><br><span class="line">			<span class="comment">//前置条件之一: 待比较元素比当前元素大</span></span><br><span class="line">			array[preIndex + <span class="number">1</span>] = array[preIndex]; <span class="comment">//将待比较元素后移一位</span></span><br><span class="line">			preIndex--; <span class="comment">//游标前移一位</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (preIndex + <span class="number">1</span> != i) &#123;</span><br><span class="line">			<span class="comment">//避免同一个元素赋值给自身</span></span><br><span class="line">			array[preIndex + <span class="number">1</span>] = current; <span class="comment">//将当前元素插入预留空位</span></span><br><span class="line">			<span class="built_in">console</span>.log(<span class="string">&#x27;array :&#x27;</span>, array);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> array;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>测试</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 测试</span></span><br><span class="line"><span class="keyword">const</span> array = [<span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>];</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&quot;原始 array :&quot;</span>, array);</span><br><span class="line">insertionSort(array);</span><br><span class="line"><span class="comment">// 原始 array:    [5, 4, 3, 2, 1]</span></span><br><span class="line"><span class="comment">// array:  		 [4, 5, 3, 2, 1]</span></span><br><span class="line"><span class="comment">// array:  		 [3, 4, 5, 2, 1]</span></span><br><span class="line"><span class="comment">// array: 		 [2, 3, 4, 5, 1]</span></span><br><span class="line"><span class="comment">// array:  		 [1, 2, 3, 4, 5]</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>分析</strong></p>
+<ul>
+<li>第一，插入排序是原地排序算法吗 ？<br>插入排序算法的运行并不需要额外的存储空间，所以空间复杂度是 O(1)，所以，这是一个<code>原地</code>排序算法。</li>
+<li>第二，插入排序是稳定的排序算法吗 ？<br>在插入排序中，对于值相同的元素，我们可以选择将后面出现的元素，插入到前面出现元素的后面，这样就可以保持原有的前后顺序不变，所以插入排序是<code>稳定</code>的排序算法。</li>
+<li>第三，插入排序的时间复杂度是多少 ？<br>最佳情况：T(n) = O(n)，当数据已经是正序时。<br>最差情况：T(n) = O(n2)，当数据是反序时。<br>平均情况：T(n) = O(n2)。</li>
+</ul>
+<p><strong>动画</strong></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.4.gif" alt="2.4"></p>
+<p><strong>二、拆半插入</strong></p>
+<p>插入排序也有一种优化算法，叫做<code>拆半插入</code>。</p>
+<p><strong>思想</strong></p>
+<p>折半插入排序是直接插入排序的升级版，鉴于插入排序第一部分为已排好序的数组，我们不必按顺序依次寻找插入点，只需比较它们的中间值与待插入元素的大小即可。</p>
+<p><strong>步骤</strong></p>
+<ul>
+<li>取 0 ~ i-1 的中间点 ( m = (i-1) &gt;&gt; 1 )，array[i] 与 array[m] 进行比较，若 array[i] &lt; array[m]，则说明待插入的元素 array[i] 应该处于数组的 0 ~ m 索引之间；反之，则说明它应该处于数组的 m ~ i-1 索引之间。</li>
+<li>重复步骤 1，每次缩小一半的查找范围，直至找到插入的位置。</li>
+<li>将数组中插入位置之后的元素全部后移一位。</li>
+<li>在指定位置插入第 i 个元素。</li>
+</ul>
+<blockquote>
+<p>注：x &gt;&gt; 1 是位运算中的右移运算，表示右移一位，等同于 x 除以 2 再取整，即 x &gt;&gt; 1 == Math.floor(x/2) 。</p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 折半插入排序</span></span><br><span class="line"><span class="keyword">const</span> binaryInsertionSort = <span class="function"><span class="params">array</span> =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">const</span> len = array.length;</span><br><span class="line">	<span class="keyword">if</span> (len &lt;= <span class="number">1</span>) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">let</span> current, i, j, low, high, m;</span><br><span class="line">	<span class="keyword">for</span> (i = <span class="number">1</span>; i &lt; len; i++) &#123;</span><br><span class="line">		low = <span class="number">0</span>;</span><br><span class="line">		high = i - <span class="number">1</span>;</span><br><span class="line">		current = array[i];</span><br><span class="line"></span><br><span class="line">		<span class="keyword">while</span> (low &lt;= high) &#123;</span><br><span class="line">			<span class="comment">//步骤 1 &amp; 2 : 折半查找</span></span><br><span class="line">			m = (low + high) &gt;&gt; <span class="number">1</span>; <span class="comment">// 注: x&gt;&gt;1 是位运算中的右移运算, 表示右移一位, 等同于 x 除以 2 再取整, 即 x&gt;&gt;1 == Math.floor(x/2) .</span></span><br><span class="line">			<span class="keyword">if</span> (array[i] &gt;= array[m]) &#123;</span><br><span class="line">				<span class="comment">//值相同时, 切换到高半区，保证稳定性</span></span><br><span class="line">				low = m + <span class="number">1</span>; <span class="comment">//插入点在高半区</span></span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				high = m - <span class="number">1</span>; <span class="comment">//插入点在低半区</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">for</span> (j = i; j &gt; low; j--) &#123;</span><br><span class="line">			<span class="comment">//步骤 3: 插入位置之后的元素全部后移一位</span></span><br><span class="line">			array[j] = array[j - <span class="number">1</span>];</span><br><span class="line">			<span class="built_in">console</span>.log(<span class="string">&#x27;array2 :&#x27;</span>, <span class="built_in">JSON</span>.parse(<span class="built_in">JSON</span>.stringify(array)));</span><br><span class="line">		&#125;</span><br><span class="line">		array[low] = current; <span class="comment">//步骤 4: 插入该元素</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">console</span>.log(<span class="string">&#x27;array2 :&#x27;</span>, <span class="built_in">JSON</span>.parse(<span class="built_in">JSON</span>.stringify(array)));</span><br><span class="line">	<span class="keyword">return</span> array;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>测试</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> array2 = [<span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>];</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;原始 array2:&#x27;</span>, array2);</span><br><span class="line">binaryInsertionSort(array2);</span><br><span class="line"><span class="comment">// 原始 array2:  [5, 4, 3, 2, 1]</span></span><br><span class="line"><span class="comment">// array2 :     [5, 5, 3, 2, 1]</span></span><br><span class="line"><span class="comment">// array2 :     [4, 5, 5, 2, 1]</span></span><br><span class="line"><span class="comment">// array2 :     [4, 4, 5, 2, 1]</span></span><br><span class="line"><span class="comment">// array2 :     [3, 4, 5, 5, 1]</span></span><br><span class="line"><span class="comment">// array2 :     [3, 4, 4, 5, 1]</span></span><br><span class="line"><span class="comment">// array2 :     [3, 3, 4, 5, 1]</span></span><br><span class="line"><span class="comment">// array2 :     [2, 3, 4, 5, 5]</span></span><br><span class="line"><span class="comment">// array2 :     [2, 3, 4, 4, 5]</span></span><br><span class="line"><span class="comment">// array2 :     [2, 3, 3, 4, 5]</span></span><br><span class="line"><span class="comment">// array2 :     [2, 2, 3, 4, 5]</span></span><br><span class="line"><span class="comment">// array2 :     [1, 2, 3, 4, 5]</span></span><br></pre></td></tr></table></figure>
+
+<p><code>注意</code>：和直接插入排序类似，折半插入排序每次交换的是相邻的且值为不同的元素，它并不会改变值相同的元素之间的顺序，因此它是稳定的。</p>
+<p><strong>三、希尔排序</strong></p>
+<p>希尔排序是一个平均时间复杂度为 O(n log n) 的算法，会在下一个章节和 归并排序、快速排序、堆排序 一起讲，本文就不展开了。</p>
+<h3 id="3-3-选择排序（Selection-Sort）"><a href="#3-3-选择排序（Selection-Sort）" class="headerlink" title="3.3 选择排序（Selection Sort）"></a>3.3 选择排序（Selection Sort）</h3><p><strong>思路</strong></p>
+<p>选择排序算法的实现思路有点类似插入排序，也分已排序区间和未排序区间。但是选择排序每次会从未排序区间中找到最小的元素，将其放到已排序区间的末尾。</p>
+<p><strong>步骤</strong></p>
+<ol>
+<li>首先在未排序序列中找到最小（大）元素，存放到排序序列的起始位置。</li>
+<li>再从剩余未排序元素中继续寻找最小（大）元素，然后放到已排序序列的末尾。</li>
+<li>重复第二步，直到所有元素均排序完毕。</li>
+</ol>
+<p><strong>实现</strong></p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> selectionSort = <span class="function"><span class="params">array</span> =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">const</span> len = array.length;</span><br><span class="line">	<span class="keyword">let</span> minIndex, temp;</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; len - <span class="number">1</span>; i++) &#123;</span><br><span class="line">		minIndex = i;</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">let</span> j = i + <span class="number">1</span>; j &lt; len; j++) &#123;</span><br><span class="line">			<span class="keyword">if</span> (array[j] &lt; array[minIndex]) &#123;</span><br><span class="line">				<span class="comment">// 寻找最小的数</span></span><br><span class="line">				minIndex = j; <span class="comment">// 将最小数的索引保存</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		temp = array[i];</span><br><span class="line">		array[i] = array[minIndex];</span><br><span class="line">		array[minIndex] = temp;</span><br><span class="line">		<span class="built_in">console</span>.log(<span class="string">&#x27;array: &#x27;</span>, array);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> array;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>测试</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 测试</span></span><br><span class="line"><span class="keyword">const</span> array = [<span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>];</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;原始array:&#x27;</span>, array);</span><br><span class="line">selectionSort(array);</span><br><span class="line"><span class="comment">// 原始 array:  [5, 4, 3, 2, 1]</span></span><br><span class="line"><span class="comment">// array:  		 [1, 4, 3, 2, 5]</span></span><br><span class="line"><span class="comment">// array:  		 [1, 2, 3, 4, 5]</span></span><br><span class="line"><span class="comment">// array: 		 [1, 2, 3, 4, 5]</span></span><br><span class="line"><span class="comment">// array:  		 [1, 2, 3, 4, 5]</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>分析</strong></p>
+<ul>
+<li>第一，选择排序是原地排序算法吗 ？<br>选择排序空间复杂度为 O(1)，是一种<code>原地</code>排序算法。</li>
+<li>第二，选择排序是稳定的排序算法吗 ？<br>选择排序每次都要找剩余未排序元素中的最小值，并和前面的元素交换位置，这样破坏了稳定性。所以，选择排序是一种<code>不稳定</code>的排序算法。</li>
+<li>第三，选择排序的时间复杂度是多少 ？<br>无论是正序还是逆序，选择排序都会遍历 n2 / 2 次来排序，所以，最佳、最差和平均的复杂度是一样的。<br>最佳情况：T(n) = O(n2)。<br>最差情况：T(n) = O(n2)。<br>平均情况：T(n) = O(n2)。</li>
+</ul>
+<p><strong>动画</strong></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.5.gif" alt="2.5"></p>
+<h3 id="3-4-归并排序（Merge-Sort）"><a href="#3-4-归并排序（Merge-Sort）" class="headerlink" title="3.4 归并排序（Merge Sort）"></a>3.4 归并排序（Merge Sort）</h3><p><strong>思想</strong></p>
+<p>排序一个数组，我们先把数组从中间分成前后两部分，然后对前后两部分分别排序，再将排好序的两部分合并在一起，这样整个数组就都有序了。</p>
+<p>归并排序采用的是<code>分治思想</code>。</p>
+<p>分治，顾名思义，就是分而治之，将一个大问题分解成小的子问题来解决。小的子问题解决了，大问题也就解决了。</p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.6.png" alt="2.6"></p>
+<blockquote>
+<p>注：x &gt;&gt; 1 是位运算中的右移运算，表示右移一位，等同于 x 除以 2 再取整，即 x &gt;&gt; 1 === Math.floor(x / 2) 。</p>
+</blockquote>
+<p><strong>实现</strong></p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> mergeSort = <span class="function"><span class="params">arr</span> =&gt;</span> &#123;</span><br><span class="line">	<span class="comment">//采用自上而下的递归方法</span></span><br><span class="line">	<span class="keyword">const</span> len = arr.length;</span><br><span class="line">	<span class="keyword">if</span> (len &lt; <span class="number">2</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> arr;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// length &gt;&gt; 1 和 Math.floor(len / 2) 等价</span></span><br><span class="line">	<span class="keyword">let</span> middle = <span class="built_in">Math</span>.floor(len / <span class="number">2</span>),</span><br><span class="line">		left = arr.slice(<span class="number">0</span>, middle),</span><br><span class="line">		right = arr.slice(middle); <span class="comment">// 拆分为两个子数组</span></span><br><span class="line">	<span class="keyword">return</span> merge(mergeSort(left), mergeSort(right));</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> merge = <span class="function">(<span class="params">left, right</span>) =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">const</span> result = [];</span><br><span class="line"></span><br><span class="line">	<span class="keyword">while</span> (left.length &amp;&amp; right.length) &#123;</span><br><span class="line">		<span class="comment">// 注意: 判断的条件是小于或等于，如果只是小于，那么排序将不稳定.</span></span><br><span class="line">		<span class="keyword">if</span> (left[<span class="number">0</span>] &lt;= right[<span class="number">0</span>]) &#123;</span><br><span class="line">			result.push(left.shift());</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			result.push(right.shift());</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">while</span> (left.length) result.push(left.shift());</span><br><span class="line"></span><br><span class="line">	<span class="keyword">while</span> (right.length) result.push(right.shift());</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> result;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>测试</strong></p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 测试</span></span><br><span class="line"><span class="keyword">const</span> arr = [<span class="number">3</span>, <span class="number">44</span>, <span class="number">38</span>, <span class="number">5</span>, <span class="number">47</span>, <span class="number">15</span>, <span class="number">36</span>, <span class="number">26</span>, <span class="number">27</span>, <span class="number">2</span>, <span class="number">46</span>, <span class="number">4</span>, <span class="number">19</span>, <span class="number">50</span>, <span class="number">48</span>];</span><br><span class="line"><span class="built_in">console</span>.time(<span class="string">&#x27;归并排序耗时&#x27;</span>);</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;arr :&#x27;</span>, mergeSort(arr));</span><br><span class="line"><span class="built_in">console</span>.timeEnd(<span class="string">&#x27;归并排序耗时&#x27;</span>);</span><br><span class="line"><span class="comment">// arr : [2, 3, 4, 5, 15, 19, 26, 27, 36, 38, 44, 46, 47, 48, 50]</span></span><br><span class="line"><span class="comment">// 归并排序耗时: 0.739990234375ms</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>分析</strong></p>
+<ul>
+<li>第一，归并排序是原地排序算法吗 ？<br>这是因为归并排序的合并函数，在合并两个有序数组为一个有序数组时，需要借助额外的存储空间。<br>实际上，尽管每次合并操作都需要申请额外的内存空间，但在合并完成之后，临时开辟的内存空间就被释放掉了。在任意时刻，CPU 只会有一个函数在执行，也就只会有一个临时的内存空间在使用。临时内存空间最大也不会超过 n 个数据的大小，所以空间复杂度是 O(n)。<br>所以，归并排序<code>不是</code>原地排序算法。</li>
+<li>第二，归并排序是稳定的排序算法吗 ？<br>merge 方法里面的 left[0] &lt;= right[0] ，保证了值相同的元素，在合并前后的先后顺序不变。归并排序<code>是稳定</code>的排序方法。</li>
+<li>第三，归并排序的时间复杂度是多少 ？<br>从效率上看，归并排序可算是排序算法中的<code>佼佼者</code>。假设数组长度为 n，那么拆分数组共需 logn 步，又每步都是一个普通的合并子数组的过程，时间复杂度为 O(n)，故其综合时间复杂度为 O(n log n)。<br>最佳情况：T(n) = O(n log n)。<br>最差情况：T(n) = O(n log n)。<br>平均情况：T(n) = O(n log n)。</li>
+</ul>
+<p><strong>动画</strong></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.7.gif" alt="2.7"></p>
+<h3 id="3-5-快速排序-（Quick-Sort）"><a href="#3-5-快速排序-（Quick-Sort）" class="headerlink" title="3.5 快速排序 （Quick Sort）"></a>3.5 快速排序 （Quick Sort）</h3><p>快速排序的特点就是快，而且效率高！它是处理大数据最快的排序算法之一。</p>
+<p><strong>思想</strong></p>
+<ul>
+<li>先找到一个基准点（一般指数组的中部），然后数组被该基准点分为两部分，依次与该基准点数据比较，如果比它小，放左边；反之，放右边。</li>
+<li>左右分别用一个空数组去存储比较后的数据。</li>
+<li>最后递归执行上述操作，直到数组长度 &lt;= 1;</li>
+</ul>
+<p>特点：快速，常用。</p>
+<p>缺点：需要另外声明两个数组，浪费了内存空间资源。</p>
+<p><strong>实现</strong></p>
+<p>方法一：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> quickSort1 = <span class="function"><span class="params">arr</span> =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> (arr.length &lt;= <span class="number">1</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> arr;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//取基准点</span></span><br><span class="line">	<span class="keyword">const</span> midIndex = <span class="built_in">Math</span>.floor(arr.length / <span class="number">2</span>);</span><br><span class="line">	<span class="comment">//取基准点的值，splice(index,1) 则返回的是含有被删除的元素的数组。</span></span><br><span class="line">	<span class="keyword">const</span> valArr = arr.splice(midIndex, <span class="number">1</span>);</span><br><span class="line">	<span class="keyword">const</span> midIndexVal = valArr[<span class="number">0</span>];</span><br><span class="line">	<span class="keyword">const</span> left = []; <span class="comment">//存放比基准点小的数组</span></span><br><span class="line">	<span class="keyword">const</span> right = []; <span class="comment">//存放比基准点大的数组</span></span><br><span class="line">	<span class="comment">//遍历数组，进行判断分配</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; arr.length; i++) &#123;</span><br><span class="line">		<span class="keyword">if</span> (arr[i] &lt; midIndexVal) &#123;</span><br><span class="line">			left.push(arr[i]); <span class="comment">//比基准点小的放在左边数组</span></span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			right.push(arr[i]); <span class="comment">//比基准点大的放在右边数组</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//递归执行以上操作，对左右两个数组进行操作，直到数组长度为 &lt;= 1</span></span><br><span class="line">	<span class="keyword">return</span> quickSort1(left).concat(midIndexVal, quickSort1(right));</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">const</span> array2 = [<span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>];</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;quickSort1 &#x27;</span>, quickSort1(array2));</span><br><span class="line"><span class="comment">// quickSort1: [1, 2, 3, 4, 5]</span></span><br></pre></td></tr></table></figure>
+
+<p>方法二：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 快速排序</span></span><br><span class="line"><span class="keyword">const</span> quickSort = <span class="function">(<span class="params">arr, left, right</span>) =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">let</span> len = arr.length,</span><br><span class="line">		partitionIndex;</span><br><span class="line">	left = <span class="keyword">typeof</span> left != <span class="string">&#x27;number&#x27;</span> ? <span class="number">0</span> : left;</span><br><span class="line">	right = <span class="keyword">typeof</span> right != <span class="string">&#x27;number&#x27;</span> ? len - <span class="number">1</span> : right;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (left &lt; right) &#123;</span><br><span class="line">		partitionIndex = partition(arr, left, right);</span><br><span class="line">		quickSort(arr, left, partitionIndex - <span class="number">1</span>);</span><br><span class="line">		quickSort(arr, partitionIndex + <span class="number">1</span>, right);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> arr;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> partition = <span class="function">(<span class="params">arr, left, right</span>) =&gt;</span> &#123;</span><br><span class="line">	<span class="comment">//分区操作</span></span><br><span class="line">	<span class="keyword">let</span> pivot = left, <span class="comment">//设定基准值（pivot）</span></span><br><span class="line">		index = pivot + <span class="number">1</span>;</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> i = index; i &lt;= right; i++) &#123;</span><br><span class="line">		<span class="keyword">if</span> (arr[i] &lt; arr[pivot]) &#123;</span><br><span class="line">			swap(arr, i, index);</span><br><span class="line">			index++;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	swap(arr, pivot, index - <span class="number">1</span>);</span><br><span class="line">	<span class="keyword">return</span> index - <span class="number">1</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> swap = <span class="function">(<span class="params">arr, i, j</span>) =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">let</span> temp = arr[i];</span><br><span class="line">	arr[i] = arr[j];</span><br><span class="line">	arr[j] = temp;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>测试</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 测试</span></span><br><span class="line"><span class="keyword">const</span> array = [<span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>];</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;原始array:&#x27;</span>, array);</span><br><span class="line"><span class="keyword">const</span> newArr = quickSort(array);</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;newArr:&#x27;</span>, newArr);</span><br><span class="line"><span class="comment">// 原始 array:  [5, 4, 3, 2, 1]</span></span><br><span class="line"><span class="comment">// newArr:     [1, 4, 3, 2, 5]</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>分析</strong></p>
+<ul>
+<li>第一，快速排序是原地排序算法吗 ？<br>因为 partition() 函数进行分区时，不需要很多额外的内存空间，所以快排是<code>原地排序</code>算法。</li>
+<li>第二，快速排序是稳定的排序算法吗 ？<br>和选择排序相似，快速排序每次交换的元素都有可能不是相邻的，因此它有可能打破原来值为相同的元素之间的顺序。因此，快速排序并<code>不稳定</code>。</li>
+<li>第三，快速排序的时间复杂度是多少 ？<br>极端的例子：如果数组中的数据原来已经是有序的了，比如 1，3，5，6，8。如果我们每次选择最后一个元素作为 pivot，那每次分区得到的两个区间都是不均等的。我们需要进行大约 n 次分区操作，才能完成快排的整个过程。每次分区我们平均要扫描大约 n / 2 个元素，这种情况下，快排的时间复杂度就从 O(nlogn) 退化成了 O(n2)。<br>最佳情况：T(n) = O(n log n)。<br>最差情况：T(n) = O(n2)。<br>平均情况：T(n) = O(n log n)。</li>
+</ul>
+<p><strong>动画</strong></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.8.gif" alt="2.8"></p>
+<p><strong>解答开篇问题</strong></p>
+<p>快排和归并用的都是分治思想，递推公式和递归代码也非常相似，那它们的区别在哪里呢 ？</p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.9.png" alt="2.9"></p>
+<p>可以发现：</p>
+<ul>
+<li>归并排序的处理过程是<code>由下而上</code>的，先处理子问题，然后再合并。</li>
+<li>而快排正好相反，它的处理过程是<code>由上而下</code>的，先分区，然后再处理子问题。</li>
+<li>归并排序虽然是稳定的、时间复杂度为 O(nlogn) 的排序算法，但是它是非原地排序算法。</li>
+<li>归并之所以是非原地排序算法，主要原因是合并函数无法在原地执行。</li>
+<li>快速排序通过设计巧妙的原地分区函数，可以实现原地排序，解决了归并排序占用太多内存的问题。</li>
+</ul>
+<h3 id="3-6-希尔排序（Shell-Sort）"><a href="#3-6-希尔排序（Shell-Sort）" class="headerlink" title="3.6 希尔排序（Shell Sort）"></a>3.6 希尔排序（Shell Sort）</h3><p><strong>思想</strong></p>
+<ul>
+<li>先将整个待排序的记录序列分割成为若干子序列。</li>
+<li>分别进行直接插入排序。</li>
+<li>待整个序列中的记录基本有序时，再对全体记录进行依次直接插入排序。</li>
+</ul>
+<p><strong>过程</strong></p>
+<ol>
+<li>举个易于理解的例子：[35, 33, 42, 10, 14, 19, 27, 44]，我们采取间隔 4。创建一个位于 4 个位置间隔的所有值的虚拟子列表。下面这些值是 { 35, 14 }，{ 33, 19 }，{ 42, 27 } 和 { 10, 44 }。</li>
+</ol>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.10.png" alt="2.10"></p>
+<ol start="2">
+<li>我们比较每个子列表中的值，并在原始数组中交换它们（如果需要）。完成此步骤后，新数组应如下所示。</li>
+</ol>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.11.png" alt="2.11"></p>
+<ol start="3">
+<li>然后，我们采用 2 的间隔，这个间隙产生两个子列表：{ 14, 27, 35, 42 }， { 19, 10, 33, 44 }。</li>
+</ol>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.12..png" alt="2.12."></p>
+<ol start="4">
+<li>我们比较并交换原始数组中的值（如果需要）。完成此步骤后，数组变成：[14, 10, 27, 19, 35, 33, 42, 44]，图如下所示，10 与 19 的位置互换一下。</li>
+</ol>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.13.png" alt="2.13"></p>
+<ol start="5">
+<li>最后，我们使用值间隔 1 对数组的其余部分进行排序，Shell sort 使用插入排序对数组进行排序。</li>
+</ol>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.14.png" alt="2.14"></p>
+<p><strong>实现</strong></p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> shellSort = <span class="function"><span class="params">arr</span> =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">let</span> len = arr.length,</span><br><span class="line">		temp,</span><br><span class="line">		gap = <span class="number">1</span>;</span><br><span class="line">	<span class="built_in">console</span>.time(<span class="string">&#x27;希尔排序耗时&#x27;</span>);</span><br><span class="line">	<span class="keyword">while</span> (gap &lt; len / <span class="number">3</span>) &#123;</span><br><span class="line">		<span class="comment">//动态定义间隔序列</span></span><br><span class="line">		gap = gap * <span class="number">3</span> + <span class="number">1</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> (gap; gap &gt; <span class="number">0</span>; gap = <span class="built_in">Math</span>.floor(gap / <span class="number">3</span>)) &#123;</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">let</span> i = gap; i &lt; len; i++) &#123;</span><br><span class="line">			temp = arr[i];</span><br><span class="line">			<span class="keyword">let</span> j = i - gap;</span><br><span class="line">			<span class="keyword">for</span> (; j &gt;= <span class="number">0</span> &amp;&amp; arr[j] &gt; temp; j -= gap) &#123;</span><br><span class="line">				arr[j + gap] = arr[j];</span><br><span class="line">			&#125;</span><br><span class="line">			arr[j + gap] = temp;</span><br><span class="line">			<span class="built_in">console</span>.log(<span class="string">&#x27;arr  :&#x27;</span>, arr);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">console</span>.timeEnd(<span class="string">&#x27;希尔排序耗时&#x27;</span>);</span><br><span class="line">	<span class="keyword">return</span> arr;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>测试</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 测试</span></span><br><span class="line"><span class="keyword">const</span> array = [<span class="number">35</span>, <span class="number">33</span>, <span class="number">42</span>, <span class="number">10</span>, <span class="number">14</span>, <span class="number">19</span>, <span class="number">27</span>, <span class="number">44</span>];</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;原始array:&#x27;</span>, array);</span><br><span class="line"><span class="keyword">const</span> newArr = shellSort(array);</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;newArr:&#x27;</span>, newArr);</span><br><span class="line"><span class="comment">// 原始 array:   [35, 33, 42, 10, 14, 19, 27, 44]</span></span><br><span class="line"><span class="comment">// arr      :   [14, 33, 42, 10, 35, 19, 27, 44]</span></span><br><span class="line"><span class="comment">// arr      :   [14, 19, 42, 10, 35, 33, 27, 44]</span></span><br><span class="line"><span class="comment">// arr      :   [14, 19, 27, 10, 35, 33, 42, 44]</span></span><br><span class="line"><span class="comment">// arr      :   [14, 19, 27, 10, 35, 33, 42, 44]</span></span><br><span class="line"><span class="comment">// arr      :   [14, 19, 27, 10, 35, 33, 42, 44]</span></span><br><span class="line"><span class="comment">// arr      :   [14, 19, 27, 10, 35, 33, 42, 44]</span></span><br><span class="line"><span class="comment">// arr      :   [10, 14, 19, 27, 35, 33, 42, 44]</span></span><br><span class="line"><span class="comment">// arr      :   [10, 14, 19, 27, 35, 33, 42, 44]</span></span><br><span class="line"><span class="comment">// arr      :   [10, 14, 19, 27, 33, 35, 42, 44]</span></span><br><span class="line"><span class="comment">// arr      :   [10, 14, 19, 27, 33, 35, 42, 44]</span></span><br><span class="line"><span class="comment">// arr      :   [10, 14, 19, 27, 33, 35, 42, 44]</span></span><br><span class="line"><span class="comment">// 希尔排序耗时: 3.592041015625ms</span></span><br><span class="line"><span class="comment">// newArr:     [10, 14, 19, 27, 33, 35, 42, 44]</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>分析</strong></p>
+<ul>
+<li>第一，希尔排序是原地排序算法吗 ？<br>希尔排序过程中，只涉及相邻数据的交换操作，只需要常量级的临时空间，空间复杂度为 O(1) 。所以，希尔排序是<code>原地排序</code>算法。</li>
+<li>第二，希尔排序是稳定的排序算法吗 ？<br>我们知道，单次直接插入排序是稳定的，它不会改变相同元素之间的相对顺序，但在多次不同的插入排序过程中，相同的元素可能在各自的插入排序中移动，可能导致相同元素相对顺序发生变化。<br>因此，希尔排序<code>不稳定</code>。</li>
+<li>第三，希尔排序的时间复杂度是多少 ？<br>最佳情况：T(n) = O(n log n)。<br>最差情况：T(n) = O(n log2 n)。<br>平均情况：T(n) = O(n log2 n)。</li>
+</ul>
+<p><strong>动画</strong></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.15.gif" alt="2.15"></p>
+<h3 id="3-7-堆排序（Heap-Sort）"><a href="#3-7-堆排序（Heap-Sort）" class="headerlink" title="3.7 堆排序（Heap Sort）"></a>3.7 堆排序（Heap Sort）</h3><p><strong>堆的定义</strong></p>
+<p>堆其实是一种特殊的树。只要满足这两点，它就是一个堆。</p>
+<ul>
+<li>堆是一个完全二叉树。<br>完全二叉树：除了最后一层，其他层的节点个数都是满的，最后一层的节点都靠左排列。</li>
+<li>堆中每一个节点的值都必须大于等于（或小于等于）其子树中每个节点的值。<br>也可以说：堆中每个节点的值都大于等于（或者小于等于）其左右子节点的值。这两种表述是等价的。</li>
+</ul>
+<p>对于每个节点的值都<code>大于等于</code>子树中每个节点值的堆，我们叫作<code>大顶堆</code>。<br>对于每个节点的值都<code>小于等于</code>子树中每个节点值的堆，我们叫作<code>小顶堆</code>。</p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.16.png" alt="2.16"></p>
+<p>其中图 1 和 图 2 是大顶堆，图 3 是小顶堆，图 4 不是堆。除此之外，从图中还可以看出来，对于同一组数据，我们可以构建多种不同形态的堆。</p>
+<p><strong>思想</strong></p>
+<ol>
+<li>将初始待排序关键字序列 (R1, R2 …. Rn) 构建成大顶堆，此堆为初始的无序区；</li>
+<li>将堆顶元素 R[1] 与最后一个元素 R[n] 交换，此时得到新的无序区 (R1, R2, ….. Rn-1) 和新的有序区 (Rn) ，且满足 R[1, 2 … n-1] &lt;= R[n]。</li>
+<li>由于交换后新的堆顶 R[1] 可能违反堆的性质，因此需要对当前无序区 (R1, R2 …… Rn-1) 调整为新堆，然后再次将 R[1] 与无序区最后一个元素交换，得到新的无序区 (R1, R2 …. Rn-2) 和新的有序区 (Rn-1, Rn)。不断重复此过程，直到有序区的元素个数为 n - 1，则整个排序过程完成。</li>
+</ol>
+<p><strong>实现</strong></p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 堆排序</span></span><br><span class="line"><span class="keyword">const</span> heapSort = <span class="function"><span class="params">array</span> =&gt;</span> &#123;</span><br><span class="line">	<span class="built_in">console</span>.time(<span class="string">&#x27;堆排序耗时&#x27;</span>);</span><br><span class="line">	<span class="comment">// 初始化大顶堆，从第一个非叶子结点开始</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="built_in">Math</span>.floor(array.length / <span class="number">2</span> - <span class="number">1</span>); i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line">		heapify(array, i, array.length);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 排序，每一次 for 循环找出一个当前最大值，数组长度减一</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="built_in">Math</span>.floor(array.length - <span class="number">1</span>); i &gt; <span class="number">0</span>; i--) &#123;</span><br><span class="line">		<span class="comment">// 根节点与最后一个节点交换</span></span><br><span class="line">		swap(array, <span class="number">0</span>, i);</span><br><span class="line">		<span class="comment">// 从根节点开始调整，并且最后一个结点已经为当前最大值，不需要再参与比较，所以第三个参数为 i，即比较到最后一个结点前一个即可</span></span><br><span class="line">		heapify(array, <span class="number">0</span>, i);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">console</span>.timeEnd(<span class="string">&#x27;堆排序耗时&#x27;</span>);</span><br><span class="line">	<span class="keyword">return</span> array;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 交换两个节点</span></span><br><span class="line"><span class="keyword">const</span> swap = <span class="function">(<span class="params">array, i, j</span>) =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">let</span> temp = array[i];</span><br><span class="line">	array[i] = array[j];</span><br><span class="line">	array[j] = temp;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 将 i 结点以下的堆整理为大顶堆，注意这一步实现的基础实际上是：</span></span><br><span class="line"><span class="comment">// 假设结点 i 以下的子堆已经是一个大顶堆，heapify 函数实现的</span></span><br><span class="line"><span class="comment">// 功能是实际上是：找到 结点 i 在包括结点 i 的堆中的正确位置。</span></span><br><span class="line"><span class="comment">// 后面将写一个 for 循环，从第一个非叶子结点开始，对每一个非叶子结点</span></span><br><span class="line"><span class="comment">// 都执行 heapify 操作，所以就满足了结点 i 以下的子堆已经是一大顶堆</span></span><br><span class="line"><span class="keyword">const</span> heapify = <span class="function">(<span class="params">array, i, length</span>) =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">let</span> temp = array[i]; <span class="comment">// 当前父节点</span></span><br><span class="line">	<span class="comment">// j &lt; length 的目的是对结点 i 以下的结点全部做顺序调整</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> j = <span class="number">2</span> * i + <span class="number">1</span>; j &lt; length; j = <span class="number">2</span> * j + <span class="number">1</span>) &#123;</span><br><span class="line">		temp = array[i]; <span class="comment">// 将 array[i] 取出，整个过程相当于找到 array[i] 应处于的位置</span></span><br><span class="line">		<span class="keyword">if</span> (j + <span class="number">1</span> &lt; length &amp;&amp; array[j] &lt; array[j + <span class="number">1</span>]) &#123;</span><br><span class="line">			j++; <span class="comment">// 找到两个孩子中较大的一个，再与父节点比较</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (temp &lt; array[j]) &#123;</span><br><span class="line">			swap(array, i, j); <span class="comment">// 如果父节点小于子节点:交换；否则跳出</span></span><br><span class="line">			i = j; <span class="comment">// 交换后，temp 的下标变为 j</span></span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>测试</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> array = [<span class="number">4</span>, <span class="number">6</span>, <span class="number">8</span>, <span class="number">5</span>, <span class="number">9</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">5</span>, <span class="number">3</span>, <span class="number">2</span>];</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;原始array:&#x27;</span>, array);</span><br><span class="line"><span class="keyword">const</span> newArr = heapSort(array);</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;newArr:&#x27;</span>, newArr);</span><br><span class="line"><span class="comment">// 原始 array:  [4, 6, 8, 5, 9, 1, 2, 5, 3, 2]</span></span><br><span class="line"><span class="comment">// 堆排序耗时: 0.15087890625ms</span></span><br><span class="line"><span class="comment">// newArr:     [1, 2, 2, 3, 4, 5, 5, 6, 8, 9]</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>分析</strong></p>
+<ul>
+<li>第一，堆排序是原地排序算法吗 ？<br>整个堆排序的过程，都只需要极个别临时存储空间，所以堆排序<code>是</code>原地排序算法。</li>
+<li>第二，堆排序是稳定的排序算法吗 ？<br>因为在排序的过程，存在将堆的最后一个节点跟堆顶节点互换的操作，所以就有可能改变值相同数据的原始相对顺序。<br>所以，堆排序是<code>不稳定</code>的排序算法。</li>
+<li>第三，堆排序的时间复杂度是多少 ？<br>堆排序包括建堆和排序两个操作，建堆过程的时间复杂度是 O(n)，排序过程的时间复杂度是 O(nlogn)，所以，堆排序整体的时间复杂度是 O(nlogn)。<br>最佳情况：T(n) = O(n log n)。<br>最差情况：T(n) = O(n log n)。<br>平均情况：T(n) = O(n log n)。</li>
+</ul>
+<p><strong>动画</strong></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.17.gif" alt="2.17"></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.18.gif" alt="2.18"></p>
+<h3 id="3-8-桶排序（Bucket-Sort）"><a href="#3-8-桶排序（Bucket-Sort）" class="headerlink" title="3.8 桶排序（Bucket Sort）"></a>3.8 桶排序（Bucket Sort）</h3><p>桶排序是计数排序的升级版，也采用了<code>分治思想</code>。</p>
+<p><strong>思想</strong></p>
+<ul>
+<li>将要排序的数据分到有限数量的几个有序的桶里。</li>
+<li>每个桶里的数据再单独进行排序（一般用插入排序或者快速排序）。</li>
+<li>桶内排完序之后，再把每个桶里的数据按照顺序依次取出，组成的序列就是有序的了。</li>
+</ul>
+<p>比如：</p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.19.png" alt="2.19"></p>
+<p>桶排序利用了函数的映射关系，高效与否的关键就在于这个映射函数的确定。</p>
+<p>为了使桶排序更加高效，我们需要做到这两点：</p>
+<ul>
+<li>在额外空间充足的情况下，尽量增大桶的数量。</li>
+<li>使用的映射函数能够将输入的 N 个数据均匀的分配到 K 个桶中。</li>
+</ul>
+<p>桶排序的核心：就在于怎么把元素平均分配到每个桶里，合理的分配将大大提高排序的效率。</p>
+<p><strong>实现</strong></p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 桶排序</span></span><br><span class="line"><span class="keyword">const</span> bucketSort = <span class="function">(<span class="params">array, bucketSize</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (array.length === <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> array;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="built_in">console</span>.time(<span class="string">&#x27;桶排序耗时&#x27;</span>);</span><br><span class="line">  <span class="keyword">let</span> i = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">let</span> minValue = array[<span class="number">0</span>];</span><br><span class="line">  <span class="keyword">let</span> maxValue = array[<span class="number">0</span>];</span><br><span class="line">  <span class="keyword">for</span> (i = <span class="number">1</span>; i &lt; array.length; i++) &#123;</span><br><span class="line">    <span class="keyword">if</span> (array[i] &lt; minValue) &#123;</span><br><span class="line">      minValue = array[i]; <span class="comment">//输入数据的最小值</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (array[i] &gt; maxValue) &#123;</span><br><span class="line">      maxValue = array[i]; <span class="comment">//输入数据的最大值</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//桶的初始化</span></span><br><span class="line">  <span class="keyword">const</span> DEFAULT_BUCKET_SIZE = <span class="number">5</span>; <span class="comment">//设置桶的默认数量为 5</span></span><br><span class="line">  bucketSize = bucketSize || DEFAULT_BUCKET_SIZE;</span><br><span class="line">  <span class="keyword">const</span> bucketCount = <span class="built_in">Math</span>.floor((maxValue - minValue) / bucketSize) + <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">const</span> buckets = <span class="keyword">new</span> <span class="built_in">Array</span>(bucketCount);</span><br><span class="line">  <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; buckets.length; i++) &#123;</span><br><span class="line">    buckets[i] = [];</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//利用映射函数将数据分配到各个桶中</span></span><br><span class="line">  <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; array.length; i++) &#123;</span><br><span class="line">    buckets[<span class="built_in">Math</span>.floor((array[i] - minValue) / bucketSize)].push(array[i]);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  array.length = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; buckets.length; i++) &#123;</span><br><span class="line">    quickSort(buckets[i]); <span class="comment">//对每个桶进行排序，这里使用了快速排序</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> j = <span class="number">0</span>; j &lt; buckets[i].length; j++) &#123;</span><br><span class="line">      array.push(buckets[i][j]);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">console</span>.timeEnd(<span class="string">&#x27;桶排序耗时&#x27;</span>);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> array;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 快速排序</span></span><br><span class="line"><span class="keyword">const</span> quickSort = <span class="function">(<span class="params">arr, left, right</span>) =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">let</span> len = arr.length,</span><br><span class="line">		partitionIndex;</span><br><span class="line">	left = <span class="keyword">typeof</span> left != <span class="string">&#x27;number&#x27;</span> ? <span class="number">0</span> : left;</span><br><span class="line">	right = <span class="keyword">typeof</span> right != <span class="string">&#x27;number&#x27;</span> ? len - <span class="number">1</span> : right;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (left &lt; right) &#123;</span><br><span class="line">		partitionIndex = partition(arr, left, right);</span><br><span class="line">		quickSort(arr, left, partitionIndex - <span class="number">1</span>);</span><br><span class="line">		quickSort(arr, partitionIndex + <span class="number">1</span>, right);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> arr;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> partition = <span class="function">(<span class="params">arr, left, right</span>) =&gt;</span> &#123;</span><br><span class="line">	<span class="comment">//分区操作</span></span><br><span class="line">	<span class="keyword">let</span> pivot = left, <span class="comment">//设定基准值（pivot）</span></span><br><span class="line">		index = pivot + <span class="number">1</span>;</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> i = index; i &lt;= right; i++) &#123;</span><br><span class="line">		<span class="keyword">if</span> (arr[i] &lt; arr[pivot]) &#123;</span><br><span class="line">			swap(arr, i, index);</span><br><span class="line">			index++;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	swap(arr, pivot, index - <span class="number">1</span>);</span><br><span class="line">	<span class="keyword">return</span> index - <span class="number">1</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> swap = <span class="function">(<span class="params">arr, i, j</span>) =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">let</span> temp = arr[i];</span><br><span class="line">	arr[i] = arr[j];</span><br><span class="line">	arr[j] = temp;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>测试</strong></p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> array = [<span class="number">4</span>, <span class="number">6</span>, <span class="number">8</span>, <span class="number">5</span>, <span class="number">9</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">5</span>, <span class="number">3</span>, <span class="number">2</span>];</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;原始array:&#x27;</span>, array);</span><br><span class="line"><span class="keyword">const</span> newArr = bucketSort(array);</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;newArr:&#x27;</span>, newArr);</span><br><span class="line"><span class="comment">// 原始 array:  [4, 6, 8, 5, 9, 1, 2, 5, 3, 2]</span></span><br><span class="line"><span class="comment">// 堆排序耗时:   0.133056640625ms</span></span><br><span class="line"><span class="comment">// newArr:  	 [1, 2, 2, 3, 4, 5, 5, 6, 8, 9]</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>分析</strong></p>
+<ul>
+<li>第一，桶排序是原地排序算法吗 ？<br>因为桶排序的空间复杂度，也即内存消耗为 O(n)，所以<code>不是</code>原地排序算法。</li>
+<li>第二，桶排序是稳定的排序算法吗 ？<br>取决于每个桶的排序方式，比如：快排就不稳定，归并就稳定。</li>
+<li>第三，桶排序的时间复杂度是多少 ？<br>因为桶内部的排序可以有多种方法，是会对桶排序的时间复杂度产生很重大的影响。所以，桶排序的时间复杂度可以是多种情况的。<br><code>总的来说</code><br>最佳情况：当输入的数据可以均匀的分配到每一个桶中。<br>最差情况：当输入的数据被分配到了同一个桶中。<br>以下是<code>桶的内部排序</code>为<code>快速排序</code>的情况：<br>如果要排序的数据有 n 个，我们把它们均匀地划分到 m 个桶内，每个桶里就有 k =n / m 个元素。每个桶内部使用快速排序，时间复杂度为 O(k * logk)。<br>m 个桶排序的时间复杂度就是 O(m * k * logk)，因为 k = n / m，所以整个桶排序的时间复杂度就是 O(n*log(n/m))。<br>当桶的个数 m 接近数据个数 n 时，log(n/m) 就是一个非常小的常量，这个时候桶排序的时间复杂度接近 O(n)。<br>最佳情况：T(n) = O(n)。当输入的数据可以均匀的分配到每一个桶中。<br>最差情况：T(n) = O(nlogn)。当输入的数据被分配到了同一个桶中。<br>平均情况：T(n) = O(n)。</li>
+</ul>
+<blockquote>
+<p>桶排序最好情况下使用线性时间 O(n)，桶排序的时间复杂度，取决与对各个桶之间数据进行排序的时间复杂度，因为其它部分的时间复杂度都为 O(n)。<br>很显然，桶划分的越小，各个桶之间的数据越少，排序所用的时间也会越少。但相应的空间消耗就会增大。</p>
+</blockquote>
+<p><strong>适用场景</strong></p>
+<ul>
+<li>桶排序比较适合用在外部排序中。</li>
+<li>外部排序就是数据存储在外部磁盘且数据量大，但内存有限，无法将整个数据全部加载到内存中。</li>
+</ul>
+<p><strong>动画</strong></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.20.gif" alt="2.20"></p>
+<h3 id="3-9-计数排序（Counting-Sort）"><a href="#3-9-计数排序（Counting-Sort）" class="headerlink" title="3.9 计数排序（Counting Sort）"></a>3.9 计数排序（Counting Sort）</h3><p><strong>思想</strong></p>
+<ul>
+<li>找出待排序的数组中最大和最小的元素。</li>
+<li>统计数组中每个值为 i 的元素出现的次数，存入新数组 countArr 的第 i 项。</li>
+<li>对所有的计数累加（从 countArr 中的第一个元素开始，每一项和前一项相加）。</li>
+<li>反向填充目标数组：将每个元素 i 放在新数组的第 countArr[i] 项，每放一个元素就将 countArr[i] 减去 1 。</li>
+</ul>
+<p>关键在于理解最后反向填充时的操作。</p>
+<p><strong>使用条件</strong></p>
+<ul>
+<li>只能用在数据范围不大的场景中，若数据范围 k 比要排序的数据 n 大很多，就不适合用计数排序。</li>
+<li>计数排序只能给非负整数排序，其他类型需要在不改变相对大小情况下，转换为非负整数。</li>
+<li>比如如果考试成绩精确到小数后一位，就需要将所有分数乘以 10，转换为整数。</li>
+</ul>
+<p><strong>实现</strong></p>
+<p>方法一：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> countingSort = <span class="function"><span class="params">array</span> =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">let</span> len = array.length,</span><br><span class="line">		result = [],</span><br><span class="line">		countArr = [],</span><br><span class="line">		min = (max = array[<span class="number">0</span>]);</span><br><span class="line">	<span class="built_in">console</span>.time(<span class="string">&#x27;计数排序耗时&#x27;</span>);</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; len; i++) &#123;</span><br><span class="line">		<span class="comment">// 获取最小，最大 值</span></span><br><span class="line">		min = min &lt;= array[i] ? min : array[i];</span><br><span class="line">		max = max &gt;= array[i] ? max : array[i];</span><br><span class="line">		countArr[array[i]] = countArr[array[i]] ? countArr[array[i]] + <span class="number">1</span> : <span class="number">1</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">console</span>.log(<span class="string">&#x27;countArr :&#x27;</span>, countArr);</span><br><span class="line">	<span class="comment">// 从最小值 -&gt; 最大值,将计数逐项相加</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> j = min; j &lt; max; j++) &#123;</span><br><span class="line">		countArr[j + <span class="number">1</span>] = (countArr[j + <span class="number">1</span>] || <span class="number">0</span>) + (countArr[j] || <span class="number">0</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">console</span>.log(<span class="string">&#x27;countArr 2:&#x27;</span>, countArr);</span><br><span class="line">	<span class="comment">// countArr 中,下标为 array 数值，数据为 array 数值出现次数；反向填充数据进入 result 数据</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> k = len - <span class="number">1</span>; k &gt;= <span class="number">0</span>; k--) &#123;</span><br><span class="line">		<span class="comment">// result[位置] = array 数据</span></span><br><span class="line">		result[countArr[array[k]] - <span class="number">1</span>] = array[k];</span><br><span class="line">		<span class="comment">// 减少 countArr 数组中保存的计数</span></span><br><span class="line">		countArr[array[k]]--;</span><br><span class="line">		<span class="comment">// console.log(&quot;array[k]:&quot;, array[k], &#x27;countArr[array[k]] :&#x27;, countArr[array[k]],)</span></span><br><span class="line">		<span class="built_in">console</span>.log(<span class="string">&#x27;result:&#x27;</span>, result);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">console</span>.timeEnd(<span class="string">&#x27;计数排序耗时&#x27;</span>);</span><br><span class="line">	<span class="keyword">return</span> result;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>测试</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> array = [<span class="number">2</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">8</span>, <span class="number">7</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">7</span>, <span class="number">3</span>, <span class="number">9</span>, <span class="number">8</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">4</span>, <span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">9</span>, <span class="number">2</span>];</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;原始 array: &#x27;</span>, array);</span><br><span class="line"><span class="keyword">const</span> newArr = countingSort(array);</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;newArr: &#x27;</span>, newArr);</span><br><span class="line"><span class="comment">// 原始 array:  [2, 2, 3, 8, 7, 1, 2, 2, 2, 7, 3, 9, 8, 2, 1, 4, 2, 4, 6, 9, 2]</span></span><br><span class="line"><span class="comment">// 计数排序耗时:   5.6708984375ms</span></span><br><span class="line"><span class="comment">// newArr:  	 [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 6, 7, 7, 8, 8, 9, 9]</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.21.png" alt="2.21"></p>
+<p>方法二：</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> countingSort2 = <span class="function">(<span class="params">arr, maxValue</span>) =&gt;</span> &#123;</span><br><span class="line">	<span class="built_in">console</span>.time(<span class="string">&#x27;计数排序耗时&#x27;</span>);</span><br><span class="line">	maxValue = maxValue || arr.length;</span><br><span class="line">	<span class="keyword">let</span> bucket = <span class="keyword">new</span> <span class="built_in">Array</span>(maxValue + <span class="number">1</span>),</span><br><span class="line">		sortedIndex = <span class="number">0</span>;</span><br><span class="line">	(arrLen = arr.length), (bucketLen = maxValue + <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; arrLen; i++) &#123;</span><br><span class="line">		<span class="keyword">if</span> (!bucket[arr[i]]) &#123;</span><br><span class="line">			bucket[arr[i]] = <span class="number">0</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		bucket[arr[i]]++;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> j = <span class="number">0</span>; j &lt; bucketLen; j++) &#123;</span><br><span class="line">		<span class="keyword">while</span> (bucket[j] &gt; <span class="number">0</span>) &#123;</span><br><span class="line">			arr[sortedIndex++] = j;</span><br><span class="line">			bucket[j]--;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">console</span>.timeEnd(<span class="string">&#x27;计数排序耗时&#x27;</span>);</span><br><span class="line">	<span class="keyword">return</span> arr;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>测试</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> array2 = [<span class="number">2</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">8</span>, <span class="number">7</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">7</span>, <span class="number">3</span>, <span class="number">9</span>, <span class="number">8</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">4</span>, <span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">9</span>, <span class="number">2</span>];</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;原始 array2: &#x27;</span>, array2);</span><br><span class="line"><span class="keyword">const</span> newArr2 = countingSort2(array2, <span class="number">21</span>);</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;newArr2: &#x27;</span>, newArr2);</span><br><span class="line"><span class="comment">// 原始 array:  [2, 2, 3, 8, 7, 1, 2, 2, 2, 7, 3, 9, 8, 2, 1, 4, 2, 4, 6, 9, 2]</span></span><br><span class="line"><span class="comment">// 计数排序耗时:   0.043212890625ms</span></span><br><span class="line"><span class="comment">// newArr:  	 [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 6, 7, 7, 8, 8, 9, 9]</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>例子</strong></p>
+<p>可以认为，<strong>计数排序其实是桶排序的一种特殊情况</strong>。</p>
+<p>当要排序的 n 个数据，所处的范围并不大的时候，比如最大值是 k，我们就可以把数据划分成 k 个桶。每个桶内的数据值都是相同的，省掉了桶内排序的时间。</p>
+<p>我们都经历过高考，高考查分数系统你还记得吗？我们查分数的时候，系统会显示我们的成绩以及所在省的排名。如果你所在的省有 50 万考生，如何通过成绩快速排序得出名次呢？</p>
+<ul>
+<li>考生的满分是 900 分，最小是 0 分，这个数据的范围很小，所以我们可以分成 901 个桶，对应分数从 0 分到 900 分。</li>
+<li>根据考生的成绩，我们将这 50 万考生划分到这 901 个桶里。桶内的数据都是分数相同的考生，所以并不需要再进行排序。</li>
+<li>我们只需要依次扫描每个桶，将桶内的考生依次输出到一个数组中，就实现了 50 万考生的排序。</li>
+<li>因为只涉及扫描遍历操作，所以时间复杂度是 O(n)。</li>
+</ul>
+<p><strong>分析</strong></p>
+<ul>
+<li>第一，计数排序是原地排序算法吗 ？<br>因为计数排序的空间复杂度为 O(k)，k 桶的个数，所以不是原地排序算法。</li>
+<li>第二，计数排序是稳定的排序算法吗 ？<br>计数排序不改变相同元素之间原本相对的顺序，因此它是稳定的排序算法。</li>
+<li>第三，计数排序的时间复杂度是多少 ？<br>最佳情况：T(n) = O(n + k)<br>最差情况：T(n) = O(n + k)<br>平均情况：T(n) = O(n + k)<br>k 是待排序列最大值。</li>
+</ul>
+<p><strong>动画</strong></p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.22.gif" alt="2.22"></p>
+<h3 id="3-10-基数排序（Radix-Sort）"><a href="#3-10-基数排序（Radix-Sort）" class="headerlink" title="3.10 基数排序（Radix Sort）"></a>3.10 基数排序（Radix Sort）</h3><p><strong>思想</strong></p>
+<p>基数排序是一种非比较型整数排序算法，其原理是将整数按位数切割成不同的数字，然后按每个位数分别比较。</p>
+<p><strong>例子</strong></p>
+<p>假设我们有 10 万个手机号码，希望将这 10 万个手机号码从小到大排序，你有什么比较快速的排序方法呢 ？</p>
+<p>这个问题里有这样的规律：假设要比较两个手机号码 a，b 的大小，如果在前面几位中，a 手机号码已经比 b 手机号码大了，那后面的几位就不用看了。所以是基于<code>位</code>来比较的。</p>
+<p>桶排序、计数排序能派上用场吗 ？手机号码有 11 位，范围太大，显然不适合用这两种排序算法。针对这个排序问题，有没有时间复杂度是 O(n) 的算法呢 ？ 有，就是基数排序。</p>
+<p><strong>使用条件</strong></p>
+<ul>
+<li>要求数据可以分割独立的<code>位</code>来比较；</li>
+<li>位之间由递进关系，如果 a 数据的高位比 b 数据大，那么剩下的地位就不用比较了；</li>
+<li>每一位的数据范围不能太大，要可以用线性排序，否则基数排序的时间复杂度无法做到 O(n)。</li>
+</ul>
+<p><strong>方案</strong></p>
+<p>按照优先从高位或低位来排序有两种实现方案:</p>
+<ul>
+<li>MSD：由高位为基底，先按 k1 排序分组，同一组中记录, 关键码 k1 相等，再对各组按 k2 排序分成子组, 之后，对后面的关键码继续这样的排序分组，直到按最次位关键码 kd 对各子组排序后，再将各组连接起来，便得到一个有序序列。MSD 方式适用于位数多的序列。</li>
+<li>LSD：由低位为基底，先从 kd 开始排序，再对 kd - 1 进行排序，依次重复，直到对 k1 排序后便得到一个有序序列。LSD 方式适用于位数少的序列。</li>
+</ul>
+<p><strong>实现</strong></p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">	* name: 基数排序</span></span><br><span class="line"><span class="comment">	* <span class="doctag">@param  </span>array 待排序数组</span></span><br><span class="line"><span class="comment">	* <span class="doctag">@param  </span>max 最大位数</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line"><span class="keyword">const</span> radixSort = <span class="function">(<span class="params">array, max</span>) =&gt;</span> &#123;</span><br><span class="line">	<span class="built_in">console</span>.time(<span class="string">&#x27;计数排序耗时&#x27;</span>);</span><br><span class="line">	<span class="keyword">const</span> buckets = [];</span><br><span class="line">	<span class="keyword">let</span> unit = <span class="number">10</span>,</span><br><span class="line">		base = <span class="number">1</span>;</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; max; i++, base *= <span class="number">10</span>, unit *= <span class="number">10</span>) &#123;</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">let</span> j = <span class="number">0</span>; j &lt; array.length; j++) &#123;</span><br><span class="line">			<span class="keyword">let</span> index = ~~((array[j] % unit) / base); <span class="comment">//依次过滤出个位，十位等等数字</span></span><br><span class="line">			<span class="keyword">if</span> (buckets[index] == <span class="literal">null</span>) &#123;</span><br><span class="line">				buckets[index] = []; <span class="comment">//初始化桶</span></span><br><span class="line">			&#125;</span><br><span class="line">			buckets[index].push(array[j]); <span class="comment">//往不同桶里添加数据</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">let</span> pos = <span class="number">0</span>,</span><br><span class="line">			value;</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">let</span> j = <span class="number">0</span>, length = buckets.length; j &lt; length; j++) &#123;</span><br><span class="line">			<span class="keyword">if</span> (buckets[j] != <span class="literal">null</span>) &#123;</span><br><span class="line">				<span class="keyword">while</span> ((value = buckets[j].shift()) != <span class="literal">null</span>) &#123;</span><br><span class="line">					array[pos++] = value; <span class="comment">//将不同桶里数据挨个捞出来，为下一轮高位排序做准备，由于靠近桶底的元素排名靠前，因此从桶底先捞</span></span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">console</span>.timeEnd(<span class="string">&#x27;计数排序耗时&#x27;</span>);</span><br><span class="line">	<span class="keyword">return</span> array;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>测试</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> array = [<span class="number">3</span>, <span class="number">44</span>, <span class="number">38</span>, <span class="number">5</span>, <span class="number">47</span>, <span class="number">15</span>, <span class="number">36</span>, <span class="number">26</span>, <span class="number">27</span>, <span class="number">2</span>, <span class="number">46</span>, <span class="number">4</span>, <span class="number">19</span>, <span class="number">50</span>, <span class="number">48</span>];</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;原始array:&#x27;</span>, array);</span><br><span class="line"><span class="keyword">const</span> newArr = radixSort(array, <span class="number">2</span>);</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;newArr:&#x27;</span>, newArr);</span><br><span class="line"><span class="comment">// 原始 array:  [3, 44, 38, 5, 47, 15, 36, 26, 27, 2, 46, 4, 19, 50, 48]</span></span><br><span class="line"><span class="comment">// 堆排序耗时:   0.064208984375ms</span></span><br><span class="line"><span class="comment">// newArr:  	 [2, 3, 4, 5, 15, 19, 26, 27, 36, 38, 44, 46, 47, 48, 50]</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>分析</strong></p>
+<ul>
+<li>第一，基数排序是原地排序算法吗 ？<br>因为计数排序的空间复杂度为 O(n + k)，所以不是原地排序算法。</li>
+<li>第二，基数排序是稳定的排序算法吗 ？<br>基数排序不改变相同元素之间的相对顺序，因此它是稳定的排序算法。</li>
+<li>第三，基数排序的时间复杂度是多少 ？<br>最佳情况：T(n) = O(n * k)<br>最差情况：T(n) = O(n * k)<br>平均情况：T(n) = O(n * k)<br>其中，k 是待排序列最大值。</li>
+</ul>
+<p><strong>动画</strong></p>
+<p>LSD 基数排序动图演示：</p>
+<p><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.23.gif" alt="2.23"></p>
+<h2 id="4-复杂度对比"><a href="#4-复杂度对比" class="headerlink" title="4. 复杂度对比"></a>4. 复杂度对比</h2><p>十大经典排序算法的 <strong>时间复杂度与空间复杂度</strong> 比较。</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>平均</th>
+<th>最好</th>
+<th>最坏</th>
+<th>空间</th>
+<th>稳定性</th>
+<th>排序方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>冒泡排序</td>
+<td>O(n2)</td>
+<td>O(n)</td>
+<td>O(n2)</td>
+<td>O(1)</td>
+<td>Yes</td>
+<td>In-place</td>
+</tr>
+<tr>
+<td>插入排序</td>
+<td>O(n2)</td>
+<td>O(n)</td>
+<td>O(n2)</td>
+<td>O(1)</td>
+<td>Yes</td>
+<td>In-place</td>
+</tr>
+<tr>
+<td>选择排序</td>
+<td>O(n2)</td>
+<td>O(n2)</td>
+<td>O(n2)</td>
+<td>O(1)</td>
+<td>No</td>
+<td>In-place</td>
+</tr>
+<tr>
+<td>归并排序</td>
+<td>O(n log n)</td>
+<td>O(n log n)</td>
+<td>O(n log n)</td>
+<td>O(n)</td>
+<td>Yes</td>
+<td>Out-place</td>
+</tr>
+<tr>
+<td>快速排序</td>
+<td>O(n log n)</td>
+<td>O(n log n)</td>
+<td>O(n2)</td>
+<td>O(logn)</td>
+<td>No</td>
+<td>In-place</td>
+</tr>
+<tr>
+<td>希尔排序</td>
+<td>O(n log n)</td>
+<td>O(n log2 n)</td>
+<td>O(n log2 n)</td>
+<td>O(1)</td>
+<td>No</td>
+<td>In-place</td>
+</tr>
+<tr>
+<td>堆排序</td>
+<td>O(n log n)</td>
+<td>O(n log n)</td>
+<td>O(n log n)</td>
+<td>O(1)</td>
+<td>No</td>
+<td>In-place</td>
+</tr>
+<tr>
+<td>桶排序</td>
+<td>O(n + k)</td>
+<td>O(n + k)</td>
+<td>O(n2)</td>
+<td>O(n + k)</td>
+<td>Yes</td>
+<td>Out-place</td>
+</tr>
+<tr>
+<td>计数排序</td>
+<td>O(n + k)</td>
+<td>O(n + k)</td>
+<td>O(n + k)</td>
+<td>O(k)</td>
+<td>Yes</td>
+<td>Out-place</td>
+</tr>
+<tr>
+<td>基数排序</td>
+<td>O(n * k)</td>
+<td>O(n * k)</td>
+<td>O(n * k)</td>
+<td>O(n + k)</td>
+<td>Yes</td>
+<td>Out-place</td>
+</tr>
+</tbody></table>
+<p>名词解释：</p>
+<ul>
+<li>n：数据规模；</li>
+<li>k：桶的个数；</li>
+<li>In-place: 占用常数内存，不占用额外内存；</li>
+<li>Out-place: 占用额外内存。</li>
+</ul>
+<h2 id="5-算法可视化工具"><a href="#5-算法可视化工具" class="headerlink" title="5. 算法可视化工具"></a>5. 算法可视化工具</h2><ul>
+<li>算法可视化工具 <a href="https://github.com/algorithm-visualizer/algorithm-visualizer">algorithm-visualizer</a><br>算法可视化工具 algorithm-visualizer 是一个交互式的在线平台，可以从代码中可视化算法，还可以看到代码执行的过程。旨在通过交互式可视化的执行来揭示算法背后的机制。<br>效果如下图：<br><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.24.gif" alt="2.24"></li>
+<li>算法可视化动画网站 <a href="https://visualgo.net/en">https://visualgo.net/en</a><br>效果如下图：<br><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.25.gif" alt="2.25"></li>
+<li>算法可视化动画网站 <a href="https://www.ee.ryerson.ca/~courses/coe428/sorting/insertionsort.html">www.ee.ryerson.ca</a><br>效果如下图：<br><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.26.gif" alt="2.26"></li>
+<li><a href="https://github.com/skidding/illustrated-algorithms">illustrated-algorithms</a><br>变量和操作的可视化表示增强了控制流和实际源代码。您可以快速前进和后退执行，以密切观察算法的工作方式。<br>效果如下图：<br><img data-src="https://raw.githubusercontent.com/yuqixuan/Figure-bed/main/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95assets/2.27.gif" alt="2.27"></li>
+</ul>
+]]></content>
+      <categories>
+        <category>数据结构和算法</category>
+      </categories>
+      <tags>
+        <tag>十大算法</tag>
+      </tags>
   </entry>
 </search>
