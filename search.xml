@@ -246,31 +246,6 @@
       </tags>
   </entry>
   <entry>
-    <title>前端优化</title>
-    <url>/2020/11/02/%E5%89%8D%E7%AB%AF%E4%BC%98%E5%8C%96/</url>
-    <content><![CDATA[<h2 id="前端优化"><a href="#前端优化" class="headerlink" title="前端优化"></a>前端优化</h2><p>降低请求量：合并资源，减少HTTP 请求数，minify / gzip 压缩，webP，lazyLoad。</p>
-<p>加快请求速度：预解析DNS，减少域名数，并行加载，CDN 分发。</p>
-<p>缓存：HTTP 协议缓存请求，离线缓存 manifest，离线数据缓存localStorage。</p>
-<p>渲染：JS/CSS优化，加载顺序，服务端渲染，pipeline。</p>
-<h2 id="性能优化"><a href="#性能优化" class="headerlink" title="性能优化"></a>性能优化</h2><h4 id="参考回答："><a href="#参考回答：" class="headerlink" title="参考回答："></a>参考回答：</h4><p>减少HTTP请求</p>
-<p>使用内容发布网络（CDN）</p>
-<p>添加本地缓存</p>
-<p>压缩资源文件</p>
-<p>将CSS样式表放在顶部，把javascript放在底部（浏览器的运行机制决定）</p>
-<p>避免使用CSS表达式</p>
-<p>减少DNS查询</p>
-<p>使用外部javascript和CSS</p>
-<p>避免重定向</p>
-<p>图片lazyLoad</p>
-]]></content>
-      <categories>
-        <category>性能优化</category>
-      </categories>
-      <tags>
-        <tag>前端优化</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>时间复杂度和空间复杂度</title>
     <url>/2020/11/02/%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%E5%92%8C%E7%A9%BA%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6/</url>
     <content><![CDATA[<h2 id="1-什么是复杂度分析-？"><a href="#1-什么是复杂度分析-？" class="headerlink" title="1. 什么是复杂度分析 ？"></a>1. 什么是复杂度分析 ？</h2><ol>
@@ -442,6 +417,31 @@
       </categories>
       <tags>
         <tag>时间和空间复杂度</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>前端优化</title>
+    <url>/2020/11/02/%E5%89%8D%E7%AB%AF%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<h2 id="前端优化"><a href="#前端优化" class="headerlink" title="前端优化"></a>前端优化</h2><p>降低请求量：合并资源，减少HTTP 请求数，minify / gzip 压缩，webP，lazyLoad。</p>
+<p>加快请求速度：预解析DNS，减少域名数，并行加载，CDN 分发。</p>
+<p>缓存：HTTP 协议缓存请求，离线缓存 manifest，离线数据缓存localStorage。</p>
+<p>渲染：JS/CSS优化，加载顺序，服务端渲染，pipeline。</p>
+<h2 id="性能优化"><a href="#性能优化" class="headerlink" title="性能优化"></a>性能优化</h2><h4 id="参考回答："><a href="#参考回答：" class="headerlink" title="参考回答："></a>参考回答：</h4><p>减少HTTP请求</p>
+<p>使用内容发布网络（CDN）</p>
+<p>添加本地缓存</p>
+<p>压缩资源文件</p>
+<p>将CSS样式表放在顶部，把javascript放在底部（浏览器的运行机制决定）</p>
+<p>避免使用CSS表达式</p>
+<p>减少DNS查询</p>
+<p>使用外部javascript和CSS</p>
+<p>避免重定向</p>
+<p>图片lazyLoad</p>
+]]></content>
+      <categories>
+        <category>性能优化</category>
+      </categories>
+      <tags>
+        <tag>前端优化</tag>
       </tags>
   </entry>
   <entry>
