@@ -121,6 +121,46 @@
       </tags>
   </entry>
   <entry>
+    <title>js优化</title>
+    <url>/2020/11/02/js%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<h2 id="优化方法："><a href="#优化方法：" class="headerlink" title="优化方法："></a>优化方法：</h2><p>1.阻塞式脚本：合并文件（减少http请求），将script标签放在body尾部（减少页面css，html的下载阻塞，减少界面的空白时间（浏览器在解析到script标签之前，不会渲染页面的任何部分））</p>
+<blockquote>
+<p>目前流行的构建工具，如webpack,gulp，都有打包、合并文件的功能。</p>
+</blockquote>
+<p>2.无阻塞式脚本：延迟脚本和动态脚本均不阻塞，即下载过程不阻塞其他进程</p>
+<p>延迟脚本：<br>defer和async属性：都是并行下载，下载过程不阻塞，区别在于执行时机，async是下载完成后立即执行；defer是等页面加载完成后再执行。defer仅当src属性声明时才生效（HTML5的规范）</p>
+<p>动态脚本：<br>动态添加script标签，返回的代码通常会立刻执行，所以，为了确保脚本下载完成且准备就绪后才执行，须侦听load事件。将script添加到head中比添加到body中更保险。</p>
+<h2 id="数据存取"><a href="#数据存取" class="headerlink" title="数据存取"></a>数据存取</h2><p>将全局变量存储到局部变量中：因为全局变量总是存在于执行环境作用域链的最末端，所以，访问全局变量是最慢的，访问局部变量是最快的。尤其是对于未优化过的JavaScript引擎。</p>
+<p>在JavaScript中，只有2个语句可以在执行时临时改变作用域链：with语句和try-catch的catch子句。with语句会使得局部变量位于作用域第二层，会使性能下降，所以应避免使用。try-catch权衡使用（因为可预测的错误说明代码有问题，应及早修复）。</p>
+<p>尽量避免使用with，try-catch，eval等动态作用域语句，因为JavaScript引擎无法通过静态分析的方法进行优化。</p>
+<p>闭包会影响性能（作用域链加深）和可能导致内存泄漏（IE中）</p>
+<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><ol>
+<li>使用对象字面量代替对象</li>
+<li>使用局部变量存储全局变量和对象成员</li>
+<li>尽量不用with，eval语句，try-catch的catch子句要谨慎使用</li>
+<li>嵌套越深，性能越差，尽量少用。</li>
+</ol>
+<h2 id="DOM编程"><a href="#DOM编程" class="headerlink" title="DOM编程"></a>DOM编程</h2><p>DOM和JavaScript是2个独立的功能，只通过API连接，用JavaScript操作DOM天生就慢，所以应尽量减少用JavaScript操作DOM。</p>
+<h3 id="原则："><a href="#原则：" class="headerlink" title="原则："></a>原则：</h3><p>1.减少访问DOM的次数，把运算尽量留在ECMAScript这一端处理。<br>2.innerHTML在绝大多数浏览器中比原生DOM方法要快（最新版的chrome除外），推荐使用。<br>3.用element.cloneNode()代替document.createElement()，稍快一些。<br>4.缓存HTML集合的length.<br>5.使用children代替childNodes，因为childNodes会包含文本节点（空格）和注释节点，还需要自己额外过滤这些节点，children已经帮我们过滤掉这些节点了，而且使用的过滤方法效率很高。<br>6.原生选择器API：querySelectorAll()和querySelector() ，IE8及以上支持<br>querySelectorAll()返回的是个nodelist（也是类数组），不是HTML集合（与getElenmentsByTagName等不同）。<br>7.减少重绘和重排：<br>在修改样式的过程中，最好避免使用下面的属性,因为它们会刷新渲染队列，尽量少查询下列属性，可以用局部变量缓存结果。<br>8.合并多次对DOM和样式的修改：<br>9.批量修改DOM时，使用documentfragment：文档片段是一个轻量级的document对象，它本身就是为了更新和移动节点设计的。<br>10.动画中使用绝对定位，使用拖放代理。<br>11.使用事件委托来减少事件处理器的数量。 </p>
+<h2 id="算法和流程控制"><a href="#算法和流程控制" class="headerlink" title="算法和流程控制"></a>算法和流程控制</h2><ol>
+<li>for…in的循环性能最差（因为它需要搜索实例和原型上的所有属性），除非，你需要遍历一个属性数量未知的对象，否则不要使用它。更不要用它遍历数组成员。其余的循环性能都差不多。</li>
+<li>倒序循环，把减法操作放到控制条件中，例如：k–，这样只是比较“它是true吗？”速度更快。</li>
+<li>forEach()比数组循环慢，如果对性能有极致要求，还是用数组循环好。</li>
+<li>当判断值多于2个时，使用switch，否则用if-else （数量少时，性能差别不大，可根据个人喜好使用）。若判断值很多，且没有什么复杂的操作，可以用数组代替switch。<br>在JavaScript中，switch使用全等操作符，不会发生类型转换的损耗。</li>
+<li>把最可能出现的条件放在首位。</li>
+<li>调用栈溢出错误基本都是由递归导致的：不正确的终止条件；包含了太多递归，超过了浏览器的调用栈限制。把递归算法改用迭代算法实现是避免调用栈溢出错误的解决方法之一。</li>
+<li>缓存：避免重复性工作，手动实现缓存（Vue源码中就有很多缓存）</li>
+</ol>
+<p><strong>tips: JavaScript的下载和执行会阻塞用户界面的绘制和其他资源的下载</strong></p>
+]]></content>
+      <categories>
+        <category>性能优化</category>
+      </categories>
+      <tags>
+        <tag>js优化</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>css优化</title>
     <url>/2020/11/02/css%E4%BC%98%E5%8C%96/</url>
     <content><![CDATA[<h2 id="1-内联首屏关键CSS（Critical-CSS）"><a href="#1-内联首屏关键CSS（Critical-CSS）" class="headerlink" title="1. 内联首屏关键CSS（Critical CSS）"></a>1. 内联首屏关键CSS（Critical CSS）</h2><p>性能优化中有一个重要的指标——<strong>首次有效绘制</strong>（First Meaningful Paint，简称FMP）即指页面的首要内容（primary content）出现在屏幕上的时间。这一指标影响用户看到页面前所需等待的时间，而<strong>内联首屏关键CSS（即Critical CSS，可以称之为首屏关键CSS）</strong>能减少这一时间。</p>
@@ -323,46 +363,6 @@
       </categories>
       <tags>
         <tag>从零开始搭建个人博客</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>js优化</title>
-    <url>/2020/11/02/js%E4%BC%98%E5%8C%96/</url>
-    <content><![CDATA[<h2 id="优化方法："><a href="#优化方法：" class="headerlink" title="优化方法："></a>优化方法：</h2><p>1.阻塞式脚本：合并文件（减少http请求），将script标签放在body尾部（减少页面css，html的下载阻塞，减少界面的空白时间（浏览器在解析到script标签之前，不会渲染页面的任何部分））</p>
-<blockquote>
-<p>目前流行的构建工具，如webpack,gulp，都有打包、合并文件的功能。</p>
-</blockquote>
-<p>2.无阻塞式脚本：延迟脚本和动态脚本均不阻塞，即下载过程不阻塞其他进程</p>
-<p>延迟脚本：<br>defer和async属性：都是并行下载，下载过程不阻塞，区别在于执行时机，async是下载完成后立即执行；defer是等页面加载完成后再执行。defer仅当src属性声明时才生效（HTML5的规范）</p>
-<p>动态脚本：<br>动态添加script标签，返回的代码通常会立刻执行，所以，为了确保脚本下载完成且准备就绪后才执行，须侦听load事件。将script添加到head中比添加到body中更保险。</p>
-<h2 id="数据存取"><a href="#数据存取" class="headerlink" title="数据存取"></a>数据存取</h2><p>将全局变量存储到局部变量中：因为全局变量总是存在于执行环境作用域链的最末端，所以，访问全局变量是最慢的，访问局部变量是最快的。尤其是对于未优化过的JavaScript引擎。</p>
-<p>在JavaScript中，只有2个语句可以在执行时临时改变作用域链：with语句和try-catch的catch子句。with语句会使得局部变量位于作用域第二层，会使性能下降，所以应避免使用。try-catch权衡使用（因为可预测的错误说明代码有问题，应及早修复）。</p>
-<p>尽量避免使用with，try-catch，eval等动态作用域语句，因为JavaScript引擎无法通过静态分析的方法进行优化。</p>
-<p>闭包会影响性能（作用域链加深）和可能导致内存泄漏（IE中）</p>
-<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><ol>
-<li>使用对象字面量代替对象</li>
-<li>使用局部变量存储全局变量和对象成员</li>
-<li>尽量不用with，eval语句，try-catch的catch子句要谨慎使用</li>
-<li>嵌套越深，性能越差，尽量少用。</li>
-</ol>
-<h2 id="DOM编程"><a href="#DOM编程" class="headerlink" title="DOM编程"></a>DOM编程</h2><p>DOM和JavaScript是2个独立的功能，只通过API连接，用JavaScript操作DOM天生就慢，所以应尽量减少用JavaScript操作DOM。</p>
-<h3 id="原则："><a href="#原则：" class="headerlink" title="原则："></a>原则：</h3><p>1.减少访问DOM的次数，把运算尽量留在ECMAScript这一端处理。<br>2.innerHTML在绝大多数浏览器中比原生DOM方法要快（最新版的chrome除外），推荐使用。<br>3.用element.cloneNode()代替document.createElement()，稍快一些。<br>4.缓存HTML集合的length.<br>5.使用children代替childNodes，因为childNodes会包含文本节点（空格）和注释节点，还需要自己额外过滤这些节点，children已经帮我们过滤掉这些节点了，而且使用的过滤方法效率很高。<br>6.原生选择器API：querySelectorAll()和querySelector() ，IE8及以上支持<br>querySelectorAll()返回的是个nodelist（也是类数组），不是HTML集合（与getElenmentsByTagName等不同）。<br>7.减少重绘和重排：<br>在修改样式的过程中，最好避免使用下面的属性,因为它们会刷新渲染队列，尽量少查询下列属性，可以用局部变量缓存结果。<br>8.合并多次对DOM和样式的修改：<br>9.批量修改DOM时，使用documentfragment：文档片段是一个轻量级的document对象，它本身就是为了更新和移动节点设计的。<br>10.动画中使用绝对定位，使用拖放代理。<br>11.使用事件委托来减少事件处理器的数量。 </p>
-<h2 id="算法和流程控制"><a href="#算法和流程控制" class="headerlink" title="算法和流程控制"></a>算法和流程控制</h2><ol>
-<li>for…in的循环性能最差（因为它需要搜索实例和原型上的所有属性），除非，你需要遍历一个属性数量未知的对象，否则不要使用它。更不要用它遍历数组成员。其余的循环性能都差不多。</li>
-<li>倒序循环，把减法操作放到控制条件中，例如：k–，这样只是比较“它是true吗？”速度更快。</li>
-<li>forEach()比数组循环慢，如果对性能有极致要求，还是用数组循环好。</li>
-<li>当判断值多于2个时，使用switch，否则用if-else （数量少时，性能差别不大，可根据个人喜好使用）。若判断值很多，且没有什么复杂的操作，可以用数组代替switch。<br>在JavaScript中，switch使用全等操作符，不会发生类型转换的损耗。</li>
-<li>把最可能出现的条件放在首位。</li>
-<li>调用栈溢出错误基本都是由递归导致的：不正确的终止条件；包含了太多递归，超过了浏览器的调用栈限制。把递归算法改用迭代算法实现是避免调用栈溢出错误的解决方法之一。</li>
-<li>缓存：避免重复性工作，手动实现缓存（Vue源码中就有很多缓存）</li>
-</ol>
-<p><strong>tips: JavaScript的下载和执行会阻塞用户界面的绘制和其他资源的下载</strong></p>
-]]></content>
-      <categories>
-        <category>性能优化</category>
-      </categories>
-      <tags>
-        <tag>js优化</tag>
       </tags>
   </entry>
   <entry>
